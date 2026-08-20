@@ -120,6 +120,7 @@ export async function POST(request) {
 
     return ok(doc, "Document uploaded successfully.");
   } catch (error) {
+    console.error("[documents/POST] error:", error);
     return handleError(error);
   }
 }
