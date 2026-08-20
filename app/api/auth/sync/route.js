@@ -23,6 +23,7 @@ export async function POST(request) {
 
     const firebaseUid = decoded?.uid || decoded?.sub;
     const email = String(decoded?.email || "").toLowerCase().trim();
+    const firebaseName = String(decoded?.name || "").trim();
     if (!firebaseUid || !email) return fail("Token is missing user identity.", 401);
 
     await dbConnect();
@@ -38,8 +39,8 @@ export async function POST(request) {
     if (user) {
       user.firebaseUid = firebaseUid;
       user.email = email;
+      if (firebaseName && !user.name) user.name = firebaseName;
       if (!user.isActive) return fail("This account is inactive.", 403);
-      // Env bootstrap admin always keeps admin role
       if (adminEmail && email === adminEmail) {
         user.role = "admin";
         if (!user.name) user.name = adminName;
@@ -48,7 +49,7 @@ export async function POST(request) {
     } else if (adminEmail && email === adminEmail) {
       user = await User.create({
         firebaseUid,
-        name: adminName,
+        name: firebaseName || adminName,
         email,
         role: "admin",
         isActive: true,
