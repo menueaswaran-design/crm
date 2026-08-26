@@ -17,23 +17,30 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { initials } from "@/lib/utils";
+import { hasPermission } from "@/lib/permissions";
 import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/compliance", label: "Compliance", icon: FileCheck2 },
-  { href: "/tasks", label: "Tasks", icon: CheckSquare },
-  { href: "/documents", label: "Documents", icon: FolderOpen },
-  { href: "/invoices", label: "Invoices", icon: Receipt },
-  { href: "/staff", label: "Staff", icon: UserCog },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" },
+  { href: "/clients", label: "Clients", icon: Users, permission: "clients" },
+  { href: "/compliance", label: "Compliance", icon: FileCheck2, permission: "compliance" },
+  { href: "/tasks", label: "Tasks", icon: CheckSquare, permission: "tasks" },
+  { href: "/documents", label: "Documents", icon: FolderOpen, permission: "documents" },
+  { href: "/invoices", label: "Invoices", icon: Receipt, permission: "invoices" },
+  { href: "/staff", label: "Staff", icon: UserCog, permission: "__admin_only" },
 ];
 
 export default function TopNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.permission === "__admin_only") return user?.role === "admin";
+    return hasPermission(user, item.permission);
+  });
+  const homeHref = visibleItems[0]?.href || "/dashboard";
 
   const isActive = (href) =>
     href === "/dashboard"
@@ -53,7 +60,7 @@ export default function TopNav() {
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
 
-            <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
+            <Link href={homeHref} className="flex items-center gap-2 shrink-0">
               <div className="h-8 w-8 rounded-md bg-indigo-600 flex items-center justify-center">
                 <Scale size={16} className="text-white" />
               </div>
@@ -62,7 +69,7 @@ export default function TopNav() {
           </div>
 
           <nav className="hidden lg:flex items-center gap-0.5">
-            {NAV_ITEMS.map((item) => {
+            {visibleItems.map((item) => {
               const active = isActive(item.href);
               const Icon = item.icon;
               return (
@@ -113,7 +120,7 @@ export default function TopNav() {
             </div>
 
             <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-              {NAV_ITEMS.map((item) => {
+              {visibleItems.map((item) => {
                 const active = isActive(item.href);
                 const Icon = item.icon;
                 return (

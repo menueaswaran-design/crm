@@ -16,12 +16,14 @@ import {
   FileText,
   Receipt,
   CalendarClock,
+  CheckCircle2,
+  Hourglass,
   CheckSquare,
   Pencil,
   Plus,
 } from "lucide-react";
 import { apiFetch, deleteData } from "@/lib/client";
-import { maskAadhaar, formatDate } from "@/lib/utils";
+import { maskAadhaar, formatDate, daysRemaining } from "@/lib/utils";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -65,6 +67,15 @@ export default function ClientDetailsPage() {
 
   const { client, compliance, tasks, documents, invoices, activities } = data;
   const gradient = CATEGORY_GRADIENTS[client.category] || CATEGORY_GRADIENTS.Other;
+
+  const incomeTaxRecords = compliance.filter((c) => c.category === "Income Tax");
+  const lastFiled = incomeTaxRecords
+    .filter((c) => c.status === "COMPLETED")
+    .sort((a, b) => new Date(b.completedAt || b.dueDate) - new Date(a.completedAt || a.dueDate))[0] || null;
+  const nextDueRecord = incomeTaxRecords
+    .filter((c) => c.status !== "COMPLETED")
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0] || null;
+  const nextDays = nextDueRecord ? daysRemaining(nextDueRecord.dueDate) : null;
 
   const infoItems = [
     { icon: IdCard, label: "PAN", value: client.pan || "—" },
@@ -167,6 +178,61 @@ export default function ClientDetailsPage() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
+          <div className="card p-6 border-l-4 border-brand-500">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold text-slate-900">IT Filing Status</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Income Tax returns at a glance</p>
+              </div>
+              <CalendarClock size={18} className="text-brand-400" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl bg-emerald-50/60 border border-emerald-100 p-4">
+                <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold text-emerald-700">
+                  <CheckCircle2 size={13} /> Last Filed
+                </p>
+                {lastFiled ? (
+                  <>
+                    <p className="mt-2 text-sm font-bold text-slate-900">{lastFiled.type}</p>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Filed on {formatDate(lastFiled.completedAt || lastFiled.dueDate)}
+                      {lastFiled.financialYear ? ` · FY ${lastFiled.financialYear}` : ""}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-500">No ITR filed yet</p>
+                )}
+              </div>
+              <div className={`rounded-xl p-4 border ${
+                nextDays !== null && nextDays < 0
+                  ? "bg-rose-50/60 border-rose-100"
+                  : nextDays !== null && nextDays <= 7
+                  ? "bg-amber-50/60 border-amber-100"
+                  : "bg-slate-50 border-slate-100"
+              }`}>
+                <p className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold ${
+                  nextDays !== null && nextDays < 0 ? "text-rose-700" : nextDays !== null && nextDays <= 7 ? "text-amber-700" : "text-slate-500"
+                }`}>
+                  <Hourglass size={13} /> Next Due
+                </p>
+                {nextDueRecord ? (
+                  <>
+                    <p className="mt-2 text-sm font-bold text-slate-900">{nextDueRecord.type}</p>
+                    <p className={`text-xs mt-0.5 ${
+                      nextDays !== null && nextDays < 0 ? "text-rose-600 font-medium" : nextDays !== null && nextDays <= 7 ? "text-amber-600 font-medium" : "text-slate-600"
+                    }`}>
+                      {nextDays === 0 ? "Due TODAY" : nextDays > 0 ? `In ${nextDays} day(s)` : `${Math.abs(nextDays)} day(s) overdue`}
+                      {" · "}{formatDate(nextDueRecord.dueDate)}
+                      {nextDueRecord.financialYear ? ` · FY ${nextDueRecord.financialYear}` : ""}
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-500">No upcoming filing scheduled</p>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <div>

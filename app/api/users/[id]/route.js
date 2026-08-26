@@ -2,6 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requireAdmin } from "@/lib/auth";
+import { sanitizePermissions } from "@/lib/permissions";
 
 export async function PATCH(request, { params }) {
   try {
@@ -15,6 +16,8 @@ export async function PATCH(request, { params }) {
     for (const key of allowed) {
       if (body[key] !== undefined) update[key] = body[key];
     }
+    const permissions = sanitizePermissions(body.permissions);
+    if (permissions !== null) update.permissions = permissions;
 
     const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (!user) return fail("User not found.", 404);

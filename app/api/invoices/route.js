@@ -2,7 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Invoice from "@/models/Invoice";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { nextInvoiceNumber } from "@/lib/counter";
 import { calculateInvoice, deriveInvoiceStatus } from "@/lib/invoice";
 import { logActivity } from "@/lib/activity";
@@ -10,7 +10,7 @@ import { logActivity } from "@/lib/activity";
 export async function GET(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "invoices");
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "";
@@ -46,7 +46,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "invoices");
     const body = await request.json();
 
     if (!body.clientId || !body.invoiceDate || !body.dueDate || !Array.isArray(body.items) || !body.items.length) {

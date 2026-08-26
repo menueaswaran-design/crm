@@ -2,7 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Document from "@/models/Document";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { deleteFromCloudinary } from "@/lib/cloudinary";
 import { deleteLocalFile } from "@/lib/storage";
 import { logActivity } from "@/lib/activity";
@@ -10,7 +10,7 @@ import { logActivity } from "@/lib/activity";
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "documents");
     const { id } = await params;
 
     const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true } })
@@ -35,7 +35,7 @@ export async function GET(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "documents");
     const { id } = await params;
 
     const doc = await Document.findById(id);

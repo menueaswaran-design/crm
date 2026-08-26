@@ -2,6 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requireAuth, requireAdmin } from "@/lib/auth";
+import { sanitizePermissions, DEFAULT_STAFF_PERMISSIONS } from "@/lib/permissions";
 import {
   createOrGetFirebaseUser,
   friendlyFirebaseAuthError,
@@ -17,7 +18,7 @@ export async function GET(request) {
         .lean();
       return ok(staff);
     }
-    const users = await User.find({}).select("-permissions").lean();
+    const users = await User.find({}).select("name email phone role isActive avatarUrl firebaseUid permissions").lean();
     return ok(users);
   } catch (error) {
     return handleError(error);
@@ -60,6 +61,7 @@ export async function POST(request) {
       phone: body.phone || "",
       role,
       isActive: body.isActive !== false,
+      permissions: sanitizePermissions(body.permissions) || DEFAULT_STAFF_PERMISSIONS,
     });
 
     return ok(
@@ -70,6 +72,7 @@ export async function POST(request) {
         phone: user.phone,
         role: user.role,
         isActive: user.isActive,
+        permissions: user.permissions,
         firebaseUid: user.firebaseUid,
       },
       "User created successfully. They can sign in with this email and password."

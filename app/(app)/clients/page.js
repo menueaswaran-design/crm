@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Search, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, LayoutGrid, Table2, Download, List } from "lucide-react";
+import * as XLSX from "xlsx";
 import { getList, deleteData, buildQuery } from "@/lib/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/context/AuthContext";
 import ClientCard from "@/components/clients/ClientCard";
+import ClientsTable from "@/components/clients/ClientsTable";
+import ClientsList from "@/components/clients/ClientsList";
 import ClientForm from "@/components/clients/ClientForm";
 import ImportClientsModal from "@/components/clients/ImportClientsModal";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -21,6 +24,7 @@ export default function ClientsPage() {
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("grid");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -77,6 +81,52 @@ export default function ClientsPage() {
     }
   };
 
+  const exportCsv = () => {
+    const headers = ["Name", "Category", "PAN", "GSTIN", "Email", "Phone", "Staff", "Status"];
+    const rows = clients.map((c) => [
+      c.name,
+      c.category || "",
+      c.pan || "",
+      c.gstin || "",
+      c.email || "",
+      c.phone || "",
+      c.assignedStaff?.name || "",
+      c.status || "",
+    ]);
+    const csv = [headers, ...rows]
+      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8;" }), "csv");
+  };
+
+  const exportExcel = () => {
+    const rows = clients.map((c) => ({
+      Name: c.name,
+      Category: c.category || "",
+      PAN: c.pan || "",
+      GSTIN: c.gstin || "",
+      Email: c.email || "",
+      Phone: c.phone || "",
+      Staff: c.assignedStaff?.name || "",
+      Status: c.status || "",
+      Added: c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-IN") : "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 10 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Clients");
+    XLSX.writeFile(wb, `clients-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const downloadBlob = (blob, ext) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `clients-${new Date().toISOString().slice(0, 10)}.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -85,6 +135,35 @@ export default function ClientsPage() {
           <p className="text-sm text-slate-500 mt-0.5">{total} clients</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-md border border-slate-200 bg-white overflow-hidden" role="group" aria-label="View format">
+            <button
+              onClick={() => setView("grid")}
+              title="Card view"
+              className={`p-2 transition-colors ${view === "grid" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
+            >
+              <LayoutGrid size={15} />
+            </button>
+            <button
+              onClick={() => setView("table")}
+              title="Table view"
+              className={`p-2 transition-colors ${view === "table" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
+            >
+              <Table2 size={15} />
+            </button>
+            <button
+              onClick={() => setView("list")}
+              title="Compact list view"
+              className={`p-2 transition-colors ${view === "list" ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100"}`}
+            >
+              <List size={15} />
+            </button>
+          </div>
+          <Button variant="secondary" size="sm" onClick={exportCsv} disabled={clients.length === 0}>
+            <Download size={15} /> CSV
+          </Button>
+          <Button variant="secondary" size="sm" onClick={exportExcel} disabled={clients.length === 0}>
+            <Download size={15} /> Excel
+          </Button>
           <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet size={15} /> Import
           </Button>
@@ -139,6 +218,10 @@ export default function ClientsPage() {
           }
           action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Add Client</Button>}
         />
+      ) : view === "table" ? (
+        <ClientsTable clients={clients} onEdit={setEditing} onDelete={setDeleting} />
+      ) : view === "list" ? (
+        <ClientsList clients={clients} onEdit={setEditing} onDelete={setDeleting} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {clients.map((c) => (

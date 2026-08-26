@@ -2,7 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Document from "@/models/Document";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/cloudinary";
 import { saveLocalFile } from "@/lib/storage";
 import { logActivity } from "@/lib/activity";
@@ -13,7 +13,7 @@ const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
 export async function GET(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "documents");
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -54,7 +54,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "documents");
 
     const formData = await request.formData();
     const clientId = formData.get("clientId");

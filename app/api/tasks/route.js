@@ -2,7 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
 import { deriveTaskStatus } from "@/lib/status";
@@ -38,7 +38,7 @@ const UNASSIGNED_QUERY = {
 export async function GET(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "tasks");
 
     const { searchParams } = new URL(request.url);
     const status = normalizeStatus(searchParams.get("status") || "");
@@ -110,7 +110,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "tasks");
     const body = await request.json();
 
     if (!body.title || !body.description || !body.priority || !body.dueDate) {

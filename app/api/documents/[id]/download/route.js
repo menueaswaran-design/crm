@@ -2,13 +2,13 @@ import dbConnect from "@/lib/mongodb";
 import Document from "@/models/Document";
 import Client from "@/models/Client";
 import { fail } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { resolveLocalFile } from "@/lib/storage";
 
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "documents");
     const { id } = await params;
 
     const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true } }).lean();

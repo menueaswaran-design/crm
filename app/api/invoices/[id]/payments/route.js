@@ -2,14 +2,14 @@ import dbConnect from "@/lib/mongodb";
 import Invoice from "@/models/Invoice";
 import Payment from "@/models/Payment";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { deriveInvoiceStatus } from "@/lib/invoice";
 import { logActivity } from "@/lib/activity";
 
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    await requireAuth(request);
+    await requirePermission(request, "invoices");
     const { id } = await params;
     const payments = await Payment.find({ invoiceId: id }).sort({ paymentDate: -1 }).lean();
     return ok(payments);
@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
 export async function POST(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "invoices");
     const { id } = await params;
     const body = await request.json();
 

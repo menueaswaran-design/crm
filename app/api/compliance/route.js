@@ -2,10 +2,11 @@ import dbConnect from "@/lib/mongodb";
 import Compliance from "@/models/Compliance";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
-import { refreshOverdueCompliance } from "@/lib/status";
+import { refreshOverdueCompliance, endOfDay } from "@/lib/status";
+import { refreshComplianceReminders, ensureRecurringRollforward } from "@/lib/reminders";
 
 const UNASSIGNED_QUERY = {
   $or: [{ assignedStaff: null }, { assignedStaff: { $exists: false } }],
@@ -14,20 +15,27 @@ const UNASSIGNED_QUERY = {
 export async function GET(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "compliance");
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || "";
     const type = searchParams.get("type") || "";
     const assigned = searchParams.get("assigned") || "";
+    const upcoming = searchParams.get("upcoming") === "1";
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10), 1), 100);
 
     await refreshOverdueCompliance();
+    await refreshComplianceReminders();
+    await ensureRecurringRollforward();
 
     const query = {};
     if (status && status !== "All") query.status = status;
     if (type && type !== "All Types") query.category = type;
+    if (upcoming) {
+      query.status = { $ne: "COMPLETED" };
+      query.dueDate = { $gte: new Date(new Date().setHours(0, 0, 0, 0)) };
+    }
 
     if (user.role === "staff") {
       query.assignedStaff = user._id;
@@ -59,7 +67,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "compliance");
     const body = await request.json();
 
     if (!body.clientId || !body.type || !body.dueDate) {
@@ -72,7 +80,7 @@ export async function POST(request) {
     if (!client) return fail("Client not found.", 404);
 
     const dueDate = new Date(body.dueDate);
-    const status = dueDate < new Date() ? "OVERDUE" : "PENDING";
+    const status = endOfDay(dueDate) < new Date() ? "OVERDUE" : "PENDING";
 
     const record = await Compliance.create({
       ...body,

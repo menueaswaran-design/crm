@@ -2,14 +2,15 @@ import dbConnect from "@/lib/mongodb";
 import Compliance from "@/models/Compliance";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
-import { createNotification } from "@/lib/notifications";
+import { endOfDay } from "@/lib/status";
+import { generateNextCompliance, refreshComplianceReminders } from "@/lib/reminders";
 
 export async function PATCH(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "compliance");
     const { id } = await params;
     const body = await request.json();
 
@@ -17,6 +18,7 @@ export async function PATCH(request, { params }) {
     if (!record) return fail("Compliance record not found.", 404);
 
     const client = await Client.findById(record.clientId).lean();
+    let nextScheduled = null;
 
     if (body.status !== undefined) {
       record.status = body.status;
@@ -37,7 +39,7 @@ export async function PATCH(request, { params }) {
     }
     if (body.dueDate) {
       record.dueDate = new Date(body.dueDate);
-      if (record.status !== "COMPLETED" && record.dueDate < new Date()) {
+      if (record.status !== "COMPLETED" && endOfDay(record.dueDate) < new Date()) {
         record.status = "OVERDUE";
       }
     }
@@ -52,9 +54,20 @@ export async function PATCH(request, { params }) {
         entityId: record._id,
         description: `${user.name} completed ${record.type} for ${client?.name || "client"}`,
       });
+
+      // Auto-create the NEXT occurrence for recurring filings (GST monthly, ITR annual, etc.)
+      const nextRecord = await generateNextCompliance(record);
+      nextScheduled = nextRecord ? nextRecord.dueDate : null;
     }
 
-    return ok(record, "Compliance updated successfully.");
+    await refreshComplianceReminders();
+
+    return ok(
+      { ...record.toJSON(), nextScheduled },
+      nextScheduled
+        ? "Marked complete. Next occurrence scheduled."
+        : "Compliance updated successfully."
+    );
   } catch (error) {
     return handleError(error);
   }
@@ -63,7 +76,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "compliance");
     const { id } = await params;
 
     const record = await Compliance.findByIdAndDelete(id);

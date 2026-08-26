@@ -20,6 +20,7 @@ const schema = z.object({
   assignedStaff: z.string().optional().or(z.literal("")),
   description: z.string().optional().or(z.literal("")),
   priority: z.enum(["LOW", "MEDIUM", "HIGH"]).default("MEDIUM"),
+  recurrence: z.enum(["NONE", "MONTHLY", "QUARTERLY", "ANNUAL"]).default("NONE"),
 });
 
 export default function ComplianceForm({ open, onClose, record, onSaved }) {
@@ -49,6 +50,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
               assignedStaff: record.assignedStaff?._id || record.assignedStaff || "",
               description: record.description || "",
               priority: record.priority || "MEDIUM",
+              recurrence: record.recurrence || "NONE",
             }
           : {
               clientId: "",
@@ -60,6 +62,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
               assignedStaff: "",
               description: "",
               priority: "MEDIUM",
+              recurrence: "NONE",
             }
       );
     }
@@ -160,6 +163,12 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
             <option value="LOW">Low</option>
             <option value="MEDIUM">Medium</option>
             <option value="HIGH">High</option>
+          </Select>
+          <Select label="Repeats" error={errors.recurrence?.message} {...register("recurrence")}>
+            <option value="NONE">One-time</option>
+            <option value="MONTHLY">Monthly (next auto-created)</option>
+            <option value="QUARTERLY">Quarterly (next auto-created)</option>
+            <option value="ANNUAL">Annual (next auto-created)</option>
           </Select>
           <div className="sm:col-span-2">
             <Textarea label="Description" placeholder="Optional notes" error={errors.description?.message} {...register("description")} />

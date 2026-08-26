@@ -1,7 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
 const UNASSIGNED_QUERY = {
@@ -11,7 +11,7 @@ const UNASSIGNED_QUERY = {
 export async function GET(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "clients");
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
@@ -68,7 +68,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "clients");
 
     const body = await request.json();
     if (!body.name || !body.email || !body.pan || !body.phone || !body.address) {

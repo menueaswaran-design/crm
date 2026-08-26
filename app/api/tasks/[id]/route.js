@@ -1,13 +1,13 @@
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
 export async function PATCH(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "tasks");
     const { id } = await params;
     const body = await request.json();
 
@@ -50,7 +50,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "tasks");
     const { id } = await params;
 
     const task = await Task.findByIdAndUpdate(id, { isDeleted: true }, { new: true });

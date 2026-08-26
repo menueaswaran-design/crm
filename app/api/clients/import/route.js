@@ -3,7 +3,7 @@ import dbConnect from "@/lib/mongodb";
 import Client from "@/models/Client";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
 const categoryMap = {
@@ -44,7 +44,7 @@ function isObjectId(value) {
 export async function POST(request) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "clients");
 
     const formData = await request.formData();
     const file = formData.get("file");

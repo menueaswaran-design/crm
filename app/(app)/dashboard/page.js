@@ -13,10 +13,6 @@ import {
   FolderOpen,
   ArrowRight,
   ArrowUpRight,
-  CalendarDays,
-  Clock,
-  Receipt,
-  ClipboardList,
   Activity,
 } from "lucide-react";
 import {
@@ -30,8 +26,9 @@ import {
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/client";
-import { formatINR, formatDate, daysRemaining } from "@/lib/utils";
+import { formatINR, formatDate } from "@/lib/utils";
 import { StatusBadge } from "@/components/common/Badge";
+import UpcomingDeadlinesCard from "@/components/dashboard/UpcomingDeadlinesCard";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -255,60 +252,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Upcoming deadlines */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-semibold text-slate-900">Upcoming Deadlines</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Next 8 due items</p>
-            </div>
-            <CalendarDays size={18} className="text-slate-300" />
-          </div>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-slate-400 py-10 text-center">No upcoming deadlines</p>
-          ) : (
-            <ul className="space-y-3.5">
-              {upcoming.slice(0, 6).map((item) => {
-                const days = daysRemaining(item.dueDate);
-                const isLate = days !== null && days < 0;
-                const isSoon = days !== null && days >= 0 && days <= 3;
-                return (
-                  <li key={`${item.type}-${item.id}`} className="flex items-start gap-3">
-                    <div
-                      className={`mt-0.5 h-9 w-9 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0 ${
-                        isLate
-                          ? "bg-rose-50 text-rose-600"
-                          : isSoon
-                          ? "bg-amber-50 text-amber-600"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
-                    >
-                      {isLate ? `${Math.abs(days)}d` : `${days ?? "—"}d`}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[13px] font-semibold text-slate-900 truncate">{item.label}</p>
-                        {item.type === "Task" && <ClipboardList size={12} className="text-slate-300 shrink-0" />}
-                      </div>
-                      <p className="text-xs text-slate-500 truncate">{item.client}</p>
-                      <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Clock size={10} /> {formatDate(item.dueDate)}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <Link
-            href="/compliance"
-            className="mt-5 block text-center text-[13px] font-medium text-brand-700 border border-slate-200 rounded-xl py-2.5 hover:bg-brand-50 hover:border-brand-200 transition-colors"
-          >
-            View all deadlines <ArrowRight size={12} className="inline" />
-          </Link>
-        </div>
+        <UpcomingDeadlinesCard items={upcoming} />
       </div>
 
-      {/* Overview + activity */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Compliance breakdown */}
         <div className="card p-6">

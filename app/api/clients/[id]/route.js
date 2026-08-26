@@ -7,13 +7,13 @@ import Invoice from "@/models/Invoice";
 import Payment from "@/models/Payment";
 import Activity from "@/models/Activity";
 import { ok, fail, handleError } from "@/lib/api";
-import { requireAuth, requireAdmin } from "@/lib/auth";
+import { requirePermission, requireAdmin } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "clients");
     const { id } = await params;
 
     const client = await Client.findOne({ _id: id, isDeleted: { $ne: true } })
@@ -42,7 +42,7 @@ export async function GET(request, { params }) {
 export async function PATCH(request, { params }) {
   try {
     await dbConnect();
-    const user = await requireAuth(request);
+    const user = await requirePermission(request, "clients");
     const { id } = await params;
     const body = await request.json();
 
