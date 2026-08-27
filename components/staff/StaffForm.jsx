@@ -16,6 +16,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
   const [role, setRole] = useState("staff");
   const [isActive, setIsActive] = useState(true);
   const [permissions, setPermissions] = useState(DEFAULT_STAFF_PERMISSIONS);
+  const [dashboardFinancials, setDashboardFinancials] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,6 +30,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
         setPhone(staff.phone || "");
         setRole(staff.role || "staff");
         setIsActive(staff.isActive !== false);
+        setDashboardFinancials(staff.dashboardFinancials === true);
         setPermissions(
           Array.isArray(staff.permissions) && staff.permissions.length > 0
             ? staff.permissions
@@ -40,6 +42,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
         setPhone("");
         setRole("staff");
         setIsActive(true);
+        setDashboardFinancials(false);
         setPermissions([...DEFAULT_STAFF_PERMISSIONS]);
       }
     }
@@ -70,7 +73,10 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
       role,
       isActive,
     };
-    if (role === "staff") payload.permissions = permissions;
+    if (role === "staff") {
+      payload.permissions = permissions;
+      payload.dashboardFinancials = dashboardFinancials;
+    }
     if (!staff) payload.password = password;
 
     setLoading(true);

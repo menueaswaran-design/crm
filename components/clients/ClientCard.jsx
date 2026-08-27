@@ -30,7 +30,10 @@ export default function ClientCard({ client, onEdit, onDelete }) {
                 {client.name}
               </h3>
             </Link>
-            <div className="mt-1 flex flex-wrap gap-1.5">
+            <div className="mt-1 flex flex-wrap gap-1.5 items-center">
+              <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-500">
+                {client.clientCode || "—"}
+              </span>
               <CategoryBadge category={client.category} />
               {unassigned && <CategoryBadge category="Unassigned" />}
             </div>

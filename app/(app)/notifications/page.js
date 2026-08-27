@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, CalendarClock, AlertTriangle, CalendarDays, CreditCard, FileText, ClipboardList, ShieldAlert } from "lucide-react";
 import { apiFetch } from "@/lib/client";
-import { formatDate } from "@/lib/utils";
+import { formatDate, getErrorMessage } from "@/lib/utils";
 import { SkeletonRows } from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
 import Button from "@/components/common/Button";
+import ErrorBanner from "@/components/common/ErrorBanner";
 
 const TYPE_META = {
   TASK_DUE: { icon: CalendarClock, cls: "bg-sky-50 text-sky-600" },
@@ -21,12 +22,16 @@ const TYPE_META = {
 export default function NotificationsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const json = await apiFetch("/api/notifications?limit=100");
       setItems(json.data || []);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -61,6 +66,8 @@ export default function NotificationsPage() {
           <CheckCheck size={14} /> Mark all as read
         </Button>
       </div>
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
 
       {loading ? (
         <SkeletonRows count={6} />

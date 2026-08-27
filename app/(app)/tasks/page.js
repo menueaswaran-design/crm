@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { Plus, Download } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { getList, deleteData, buildQuery } from "@/lib/client";
+import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { useAuth } from "@/context/AuthContext";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskForm from "@/components/tasks/TaskForm";
@@ -11,17 +13,31 @@ import Pagination from "@/components/common/Pagination";
 import EmptyState from "@/components/common/EmptyState";
 import { SkeletonCards } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
+import ErrorBanner from "@/components/common/ErrorBanner";
+import { formatDate, getErrorMessage } from "@/lib/utils";
 
 const STATUSES = ["All Status", "Pending", "In Progress", "Completed", "Overdue"];
 const PRIORITIES = ["All Priority", "Low", "Medium", "High"];
 
-export default function TasksPage() {
+function statusFromParam(status) {
+  if (!status) return "All Status";
+  const label = status
+    .split("_")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+  return STATUSES.includes(label) ? label : "All Status";
+}
+
+function TasksPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const searchParams = useSearchParams();
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState("All Status");
+  const [error, setError] = useState("");
+  const [status, setStatus] = useState(() => statusFromParam(searchParams.get("status")));
   const [priority, setPriority] = useState("All Priority");
   const [assigned, setAssigned] = useState("");
   const [page, setPage] = useState(1);
@@ -32,9 +48,11 @@ export default function TasksPage() {
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exporting, setExporting] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const { data, pagination } = await getList(
         `/api/tasks${buildQuery({
@@ -48,6 +66,8 @@ export default function TasksPage() {
       setTasks(data);
       setTotal(pagination.total || 0);
       setTotalPages(pagination.totalPages || 1);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -61,6 +81,47 @@ export default function TasksPage() {
     setFormOpen(false);
     setEditing(null);
     load();
+  };
+
+  const handleExport = async (format) => {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const all = await fetchAllList("/api/tasks", {
+        status,
+        priority,
+        assigned: isAdmin ? assigned : "",
+      });
+      if (format === "csv") {
+        downloadCSV({
+          filename: "tasks",
+          headers: ["Title", "Client", "Assigned To", "Priority", "Status", "Due Date"],
+          rows: all.map((t) => [
+            t.title,
+            t.clientId?.name || "",
+            t.assignedTo?.name || "",
+            t.priority || "",
+            t.derivedStatus || t.status || "",
+            formatDate(t.dueDate),
+          ]),
+        });
+      } else {
+        downloadExcel({
+          filename: "tasks",
+          sheetName: "Tasks",
+          rows: all.map((t) => ({
+            Title: t.title,
+            Client: t.clientId?.name || "",
+            "Assigned To": t.assignedTo?.name || "",
+            Priority: t.priority || "",
+            Status: t.derivedStatus || t.status || "",
+            "Due Date": formatDate(t.dueDate),
+          })),
+        });
+      }
+    } finally {
+      setExporting(null);
+    }
   };
 
   const confirmDelete = async () => {
@@ -82,9 +143,17 @@ export default function TasksPage() {
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Tasks</h1>
           <p className="text-sm text-slate-500 mt-0.5">{total} tasks</p>
         </div>
-        <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-          <Plus size={15} /> Create Task
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
+            <Download size={15} /> CSV
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
+            <Download size={15} /> Excel
+          </Button>
+          <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <Plus size={15} /> Create Task
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
@@ -118,6 +187,8 @@ export default function TasksPage() {
           </select>
         )}
       </div>
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
 
       {loading ? (
         <SkeletonCards count={6} />
@@ -163,5 +234,13 @@ export default function TasksPage() {
         loading={deleteLoading}
       />
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div className="card p-6 text-sm text-slate-400">Loading tasks...</div>}>
+      <TasksPage />
+    </Suspense>
   );
 }

@@ -23,12 +23,13 @@ import {
   Plus,
 } from "lucide-react";
 import { apiFetch, deleteData } from "@/lib/client";
-import { maskAadhaar, formatDate, daysRemaining } from "@/lib/utils";
+import { maskAadhaar, formatDate, daysRemaining, getErrorMessage } from "@/lib/utils";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
+import ErrorBanner from "@/components/common/ErrorBanner";
 
 const CATEGORY_GRADIENTS = {
   Individual: "from-sky-400 to-blue-600",
@@ -45,14 +46,18 @@ export default function ClientDetailsPage() {
   const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const json = await apiFetch(`/api/clients/${clientId}`);
       setData(json.data);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -63,6 +68,12 @@ export default function ClientDetailsPage() {
   }, [load]);
 
   if (loading) return <Loading label="Loading client details..." />;
+  if (error)
+    return (
+      <div className="max-w-md mx-auto mt-10">
+        <ErrorBanner message={error} onRetry={load} />
+      </div>
+    );
   if (!data) return <EmptyState title="Client not found" />;
 
   const { client, compliance, tasks, documents, invoices, activities } = data;
@@ -78,6 +89,7 @@ export default function ClientDetailsPage() {
   const nextDays = nextDueRecord ? daysRemaining(nextDueRecord.dueDate) : null;
 
   const infoItems = [
+    { icon: IdCard, label: "Client ID", value: client.clientCode || "—" },
     { icon: IdCard, label: "PAN", value: client.pan || "—" },
     { icon: Fingerprint, label: "Aadhaar", value: maskAadhaar(client.aadhaar) },
     { icon: Building2, label: "GSTIN", value: client.gstin || "—" },

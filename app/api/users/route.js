@@ -18,7 +18,7 @@ export async function GET(request) {
         .lean();
       return ok(staff);
     }
-    const users = await User.find({}).select("name email phone role isActive avatarUrl firebaseUid permissions").lean();
+    const users = await User.find({}).select("name email phone role isActive avatarUrl firebaseUid permissions dashboardFinancials").lean();
     return ok(users);
   } catch (error) {
     return handleError(error);
@@ -62,6 +62,7 @@ export async function POST(request) {
       role,
       isActive: body.isActive !== false,
       permissions: sanitizePermissions(body.permissions) || DEFAULT_STAFF_PERMISSIONS,
+      dashboardFinancials: body.dashboardFinancials === true,
     });
 
     return ok(
@@ -73,6 +74,7 @@ export async function POST(request) {
         role: user.role,
         isActive: user.isActive,
         permissions: user.permissions,
+        dashboardFinancials: user.dashboardFinancials,
         firebaseUid: user.firebaseUid,
       },
       "User created successfully. They can sign in with this email and password."

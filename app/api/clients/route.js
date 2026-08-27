@@ -3,10 +3,15 @@ import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { nextClientCode } from "@/lib/counter";
 
 const UNASSIGNED_QUERY = {
   $or: [{ assignedStaff: null }, { assignedStaff: { $exists: false } }],
 };
+
+function isDuplicateKey(error) {
+  return error?.code === 11000;
+}
 
 export async function GET(request) {
   try {
@@ -27,6 +32,7 @@ export async function GET(request) {
       and.push({
         $or: [
           { name: { $regex: search, $options: "i" } },
+          { clientCode: { $regex: search, $options: "i" } },
           { pan: { $regex: search, $options: "i" } },
           { gstin: { $regex: search, $options: "i" } },
           { email: { $regex: search, $options: "i" } },
@@ -87,14 +93,24 @@ export async function POST(request) {
       if (existingGstin) return fail("A client with this GSTIN already exists.", 409);
     }
 
-    const client = await Client.create({
-      ...body,
-      pan,
-      gstin,
-      assignedStaff,
-      createdBy: user._id,
-      status: body.status || "active",
-    });
+    let client = null;
+    for (let attempt = 0; attempt < 3 && !client; attempt++) {
+      try {
+        client = await Client.create({
+          ...body,
+          clientCode: await nextClientCode(body.name),
+          pan,
+          gstin,
+          assignedStaff,
+          createdBy: user._id,
+          status: body.status || "active",
+        });
+      } catch (error) {
+        // Extremely unlikely, but retry once if the generated code collides.
+        if (attempt < 2 && isDuplicateKey(error)) continue;
+        throw error;
+      }
+    }
 
     await logActivity({
       userId: user._id,

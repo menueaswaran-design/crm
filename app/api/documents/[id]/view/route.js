@@ -26,12 +26,12 @@ export async function GET(request, { params }) {
 
     const headers = {
       "Content-Type": file.mime,
-      "Content-Disposition": `attachment; filename="${encodeURIComponent(doc.name)}"`,
+      "Content-Disposition": `inline; filename="${encodeURIComponent(doc.name)}"`,
     };
     return file.kind === "stream"
       ? new Response(file.body, { headers })
       : new Response(new Uint8Array(file.data), { headers });
   } catch (error) {
-    return fail("Unable to download document.", 500);
+    return fail("Unable to open document.", 500);
   }
 }

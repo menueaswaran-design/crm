@@ -31,6 +31,9 @@ export default function ClientsTable({ clients, onEdit, onDelete }) {
                 <Link href={`/clients/${c._id}`} className="font-medium text-slate-900 hover:text-indigo-700">
                   {c.name}
                 </Link>
+                {c.clientCode && (
+                  <p className="font-mono text-[11px] text-slate-400">{c.clientCode}</p>
+                )}
                 {c.status === "inactive" && (
                   <span className="ml-2 text-[11px] rounded bg-slate-100 text-slate-500 px-1.5 py-0.5">Inactive</span>
                 )}

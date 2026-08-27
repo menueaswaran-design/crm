@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, ReceiptText } from "lucide-react";
-import { getList, deleteData, buildQuery } from "@/lib/client";
+import { Plus, ReceiptText, Download } from "lucide-react";
+import { getList, deleteData, buildQuery, apiFetch } from "@/lib/client";
+import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
+import { formatINR, formatDate, getErrorMessage } from "@/lib/utils";
 import InvoiceTable from "@/components/invoices/InvoiceTable";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import PaymentModal from "@/components/invoices/PaymentModal";
@@ -12,12 +14,14 @@ import EmptyState from "@/components/common/EmptyState";
 import { SkeletonRows } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
+import ErrorBanner from "@/components/common/ErrorBanner";
 
 const STATUSES = ["All", "PENDING", "PARTIAL", "PAID", "OVERDUE"];
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [totals, setTotals] = useState(null);
   const [status, setStatus] = useState("All");
   const [page, setPage] = useState(1);
@@ -29,9 +33,11 @@ export default function InvoicesPage() {
   const [paying, setPaying] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exporting, setExporting] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const { data, pagination } = await getList(
         `/api/invoices${buildQuery({ status, page, limit: 15 })}`
@@ -41,16 +47,14 @@ export default function InvoicesPage() {
       setTotal(pagination.total || 0);
 
       // Totals across the full dataset come from the dashboard summary.
-      const s = await fetch("/api/dashboard/summary").then((r) => r.json());
-      setTotals(
-        s.data
-          ? {
-              totalRevenue: s.data.totalRevenue,
-              amountReceived: s.data.amountReceived,
-              outstanding: s.data.outstandingAmount,
-            }
-          : null
-      );
+      const s = await apiFetch("/api/dashboard/summary");
+      setTotals({
+        totalRevenue: s.data?.totalRevenue,
+        amountReceived: s.data?.amountReceived,
+        outstanding: s.data?.outstandingAmount,
+      });
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -78,6 +82,56 @@ export default function InvoicesPage() {
     }
   };
 
+  const handleExport = async (format) => {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const all = await fetchAllList("/api/invoices", { status });
+      if (format === "csv") {
+        downloadCSV({
+          filename: "invoices",
+          headers: [
+            "Invoice #",
+            "Client",
+            "Invoice Date",
+            "Due Date",
+            "Total Amount",
+            "Paid Amount",
+            "Outstanding",
+            "Status",
+          ],
+          rows: all.map((inv) => [
+            inv.invoiceNumber,
+            inv.clientId?.name || "",
+            formatDate(inv.invoiceDate),
+            formatDate(inv.dueDate),
+            formatINR(inv.totalAmount),
+            formatINR(inv.paidAmount),
+            formatINR(inv.outstandingAmount),
+            inv.status || "",
+          ]),
+        });
+      } else {
+        downloadExcel({
+          filename: "invoices",
+          sheetName: "Invoices",
+          rows: all.map((inv) => ({
+            "Invoice #": inv.invoiceNumber,
+            Client: inv.clientId?.name || "",
+            "Invoice Date": formatDate(inv.invoiceDate),
+            "Due Date": formatDate(inv.dueDate),
+            "Total Amount": inv.totalAmount ?? 0,
+            "Paid Amount": inv.paidAmount ?? 0,
+            Outstanding: inv.outstandingAmount ?? 0,
+            Status: inv.status || "",
+          })),
+        });
+      }
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -85,10 +139,20 @@ export default function InvoicesPage() {
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Invoices</h1>
           <p className="text-sm text-slate-500 mt-0.5">Billing and payments</p>
         </div>
-        <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-          <Plus size={15} /> Create Invoice
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
+            <Download size={15} /> CSV
+          </Button>
+          <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
+            <Download size={15} /> Excel
+          </Button>
+          <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
+            <Plus size={15} /> Create Invoice
+          </Button>
+        </div>
       </div>
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
 
       <InvoiceSummaryCards totals={totals} loading={loading && !totals} />
 

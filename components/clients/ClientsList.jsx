@@ -13,6 +13,9 @@ export default function ClientsList({ clients, onEdit, onDelete }) {
             <Link href={`/clients/${c._id}`} className="font-medium text-sm text-slate-900 hover:text-indigo-700 truncate">
               {c.name}
             </Link>
+            {c.clientCode && (
+              <span className="font-mono text-[11px] text-slate-400 shrink-0">{c.clientCode}</span>
+            )}
             <CategoryBadge category={c.category} />
             {c.status === "inactive" && (
               <span className="text-[11px] rounded bg-slate-100 text-slate-500 px-1.5 py-0.5 shrink-0">Inactive</span>

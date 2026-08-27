@@ -30,13 +30,38 @@ const schema = z.object({
 export default function ClientForm({ open, onClose, client, onSaved }) {
   const [staff, setStaff] = useState([]);
   const [serverError, setServerError] = useState("");
+  const [nextSeq, setNextSeq] = useState("0001");
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema) });
+
+  useEffect(() => {
+    if (open && !client) {
+      (async () => {
+        try {
+          const json = await apiFetch("/api/clients/code");
+          setNextSeq(json.data?.next || "0001");
+        } catch {
+          setNextSeq("0001");
+        }
+      })();
+    }
+  }, [open, client]);
+
+  const nameValue = client ? client.name : watch("name");
+  const codePreview = client
+    ? client.clientCode
+    : `${(nameValue || "")
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w.charAt(0).toUpperCase())
+        .join("") || "CL"}-${nextSeq}`;
 
   useEffect(() => {
     if (open) {
@@ -125,6 +150,13 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
       )}
       <form id="client-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Client ID (auto-generated)"
+            value={codePreview}
+            readOnly
+            hint={client ? "Assigned when client was created." : "Created automatically and can't be changed."}
+            className="bg-slate-50 text-slate-500 font-mono"
+          />
           <Input label="Client Name" required placeholder="e.g. Amit Verma" error={errors.name?.message} {...register("name")} />
           <Select label="Category" required error={errors.category?.message} {...register("category")}>
             {CLIENT_CATEGORIES.map((c) => (

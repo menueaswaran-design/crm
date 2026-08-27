@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power } from "lucide-react";
+import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power, Download } from "lucide-react";
 import { apiFetch, patchData, deleteData } from "@/lib/client";
+import { downloadCSV, downloadExcel } from "@/lib/export";
 import { useAuth } from "@/context/AuthContext";
 import StaffForm from "@/components/staff/StaffForm";
 import Badge from "@/components/common/Badge";
@@ -10,25 +11,31 @@ import EmptyState from "@/components/common/EmptyState";
 import { SkeletonRows } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
-import { initials } from "@/lib/utils";
+import ErrorBanner from "@/components/common/ErrorBanner";
+import { initials, getErrorMessage } from "@/lib/utils";
 
 export default function StaffPage() {
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === "admin";
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deactivating, setDeactivating] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [exporting, setExporting] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const json = await apiFetch("/api/users");
       setStaff(json.data || []);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -60,6 +67,31 @@ export default function StaffPage() {
     }
   };
 
+  const handleExport = (format) => {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const rows = filtered.map((u) => ({
+        Name: u.name || "",
+        Email: u.email || "",
+        Phone: u.phone || "",
+        Role: u.role || "",
+        Status: u.isActive ? "Active" : "Inactive",
+      }));
+      if (format === "csv") {
+        downloadCSV({
+          filename: "staff",
+          headers: ["Name", "Email", "Phone", "Role", "Status"],
+          rows: rows.map((r) => [r.Name, r.Email, r.Phone, r.Role, r.Status]),
+        });
+      } else {
+        downloadExcel({ filename: "staff", sheetName: "Staff", rows });
+      }
+    } finally {
+      setExporting(null);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -67,11 +99,19 @@ export default function StaffPage() {
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Staff</h1>
           <p className="text-sm text-slate-500 mt-0.5">Team members and access</p>
         </div>
-        {isAdmin && (
-          <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <UserPlus size={15} /> Add Staff
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
+            <Download size={15} /> CSV
           </Button>
-        )}
+          <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
+            <Download size={15} /> Excel
+          </Button>
+          {isAdmin && (
+            <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
+              <UserPlus size={15} /> Add Staff
+            </Button>
+          )}
+        </div>
       </div>
 
       {!isAdmin && (
@@ -79,6 +119,8 @@ export default function StaffPage() {
           You have view-only access. Only administrators can add or edit staff members.
         </div>
       )}
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-0 sm:min-w-56">

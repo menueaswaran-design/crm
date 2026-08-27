@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Download, Trash2, File, FolderOpen } from "lucide-react";
+import { FileText, Download, Eye, Trash2, File, FolderOpen } from "lucide-react";
 import Button from "@/components/common/Button";
 import { formatBytes, formatDate } from "@/lib/utils";
 
@@ -72,11 +72,19 @@ export default function DocumentCard({ doc, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-slate-100">
+      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
+        <button
+          onClick={() => window.open(`/api/documents/${doc._id}/view`, "_blank")}
+          className="shrink-0 p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-colors"
+          aria-label="View document"
+          title="View document"
+        >
+          <Eye size={15} />
+        </button>
         <Button
           size="sm"
           variant="secondary"
-          className="w-full"
+          className="flex-1"
           onClick={() => window.open(`/api/documents/${doc._id}/download`, "_blank")}
         >
           <Download size={14} /> Download

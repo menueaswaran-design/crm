@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { nextClientCode } from "@/lib/counter";
 
 const categoryMap = {
   individual: "Individual",
@@ -168,6 +169,18 @@ export async function POST(request) {
       if (gstin && (existingGstin.has(gstin) || seenGstin.has(gstin))) {
         rowErrors.push(`Row ${row.rowNo}: duplicate GSTIN (${gstin}) skipped.`);
         continue;
+      }
+
+      const clientCode = await nextClientCode(row.data.name);
+      const existingCode = await Client.findOne({ clientCode, isDeleted: { $ne: true } })
+        .select("clientCode")
+        .lean();
+      if (existingCode) {
+        // Rare: counter collision — retry once with the next sequence.
+        const retry = await nextClientCode(row.data.name);
+        row.data.clientCode = retry;
+      } else {
+        row.data.clientCode = clientCode;
       }
 
       seenPan.add(pan);

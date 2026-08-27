@@ -26,8 +26,9 @@ import {
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/client";
-import { formatINR, formatDate } from "@/lib/utils";
-import { StatusBadge } from "@/components/common/Badge";
+import { getErrorMessage, formatINR, formatDate } from "@/lib/utils";
+import { canViewFinancials } from "@/lib/permissions";
+import ErrorBanner from "@/components/common/ErrorBanner";
 import UpcomingDeadlinesCard from "@/components/dashboard/UpcomingDeadlinesCard";
 
 export default function DashboardPage() {
@@ -37,25 +38,31 @@ export default function DashboardPage() {
   const [activity, setActivity] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [s, r, a, u] = await Promise.all([
+        apiFetch("/api/dashboard/summary"),
+        apiFetch("/api/dashboard/revenue"),
+        apiFetch("/api/dashboard/activity"),
+        apiFetch("/api/dashboard/upcoming"),
+      ]);
+      setSummary(s.data);
+      setRevenue(r.data || []);
+      setActivity(a.data || []);
+      setUpcoming(u.data || []);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!user) return;
-    (async () => {
-      try {
-        const [s, r, a, u] = await Promise.all([
-          apiFetch("/api/dashboard/summary"),
-          apiFetch("/api/dashboard/revenue"),
-          apiFetch("/api/dashboard/activity"),
-          apiFetch("/api/dashboard/upcoming"),
-        ]);
-        setSummary(s.data);
-        setRevenue(r.data || []);
-        setActivity(a.data || []);
-        setUpcoming(u.data || []);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    if (user) load();
   }, [user]);
 
   if (loading) {
@@ -101,6 +108,7 @@ export default function DashboardPage() {
       icon: FileCheck2,
       tile: "from-amber-400 to-orange-500",
       sub: "in progress",
+      href: "/compliance?status=PENDING",
     },
     {
       label: "Pending Tasks",
@@ -109,6 +117,7 @@ export default function DashboardPage() {
       icon: CheckSquare,
       tile: "from-sky-400 to-blue-600",
       sub: "in progress",
+      href: "/tasks?status=PENDING",
     },
     {
       label: "Overdue",
@@ -117,6 +126,7 @@ export default function DashboardPage() {
       icon: AlertTriangle,
       tile: "from-rose-400 to-rose-600",
       sub: "needs attention",
+      href: "/compliance?status=OVERDUE",
       alert: (summary?.compliance?.OVERDUE ?? 0) + (summary?.tasks?.OVERDUE ?? 0) > 0,
     },
     {
@@ -125,6 +135,7 @@ export default function DashboardPage() {
       icon: TrendingUp,
       tile: "from-emerald-400 to-teal-600",
       sub: "billed",
+      financial: true,
     },
     {
       label: "Amount Received",
@@ -132,6 +143,7 @@ export default function DashboardPage() {
       icon: Wallet,
       tile: "from-emerald-500 to-green-600",
       sub: "collected",
+      financial: true,
     },
     {
       label: "Outstanding",
@@ -139,6 +151,7 @@ export default function DashboardPage() {
       icon: IndianRupee,
       tile: "from-violet-400 to-purple-600",
       sub: "receivable",
+      financial: true,
     },
     {
       label: "Documents",
@@ -149,18 +162,21 @@ export default function DashboardPage() {
     },
   ];
 
+  const viewFinancials = canViewFinancials(user);
+  const visibleStats = viewFinancials ? stats : stats.filter((s) => !s.financial);
+
   const complianceData = [
-    { name: "Pending", value: summary?.compliance?.PENDING ?? 0, color: "#f59e0b" },
-    { name: "In Progress", value: summary?.compliance?.IN_PROGRESS ?? 0, color: "#0ea5e9" },
-    { name: "Overdue", value: summary?.compliance?.OVERDUE ?? 0, color: "#f43f5e" },
-    { name: "Completed", value: summary?.compliance?.COMPLETED ?? 0, color: "#10b981" },
+    { name: "Pending", value: summary?.compliance?.PENDING ?? 0, color: "#f59e0b", href: "/compliance?status=PENDING" },
+    { name: "In Progress", value: summary?.compliance?.IN_PROGRESS ?? 0, color: "#0ea5e9", href: "/compliance?status=IN_PROGRESS" },
+    { name: "Overdue", value: summary?.compliance?.OVERDUE ?? 0, color: "#f43f5e", href: "/compliance?status=OVERDUE" },
+    { name: "Completed", value: summary?.compliance?.COMPLETED ?? 0, color: "#10b981", href: "/compliance?status=COMPLETED" },
   ];
 
   const taskData = [
-    { name: "Pending", value: summary?.tasks?.PENDING ?? 0, color: "#f59e0b" },
-    { name: "In Progress", value: summary?.tasks?.IN_PROGRESS ?? 0, color: "#0ea5e9" },
-    { name: "Completed", value: summary?.tasks?.COMPLETED ?? 0, color: "#10b981" },
-    { name: "Overdue", value: summary?.tasks?.OVERDUE ?? 0, color: "#f43f5e" },
+    { name: "Pending", value: summary?.tasks?.PENDING ?? 0, color: "#f59e0b", href: "/tasks?status=PENDING" },
+    { name: "In Progress", value: summary?.tasks?.IN_PROGRESS ?? 0, color: "#0ea5e9", href: "/tasks?status=IN_PROGRESS" },
+    { name: "Completed", value: summary?.tasks?.COMPLETED ?? 0, color: "#10b981", href: "/tasks?status=COMPLETED" },
+    { name: "Overdue", value: summary?.tasks?.OVERDUE ?? 0, color: "#f43f5e", href: "/tasks?status=OVERDUE" },
   ];
 
   const complianceTotal = complianceData.reduce((s, d) => s + d.value, 0) || 1;
@@ -186,70 +202,101 @@ export default function DashboardPage() {
         </Link>
       </div>
 
+      {error && <ErrorBanner message={error} onRetry={load} />}
+
       {/* Stat cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className={`card card-hover p-5 ${s.alert ? "ring-2 ring-rose-200" : ""}`}
-          >
-            <div className="flex items-start justify-between">
-              <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${s.tile} flex items-center justify-center text-white shadow-md`}>
-                <s.icon size={20} />
+        {visibleStats.map((s) => {
+          const contents = (
+            <>
+              <div className="flex items-start justify-between">
+                <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${s.tile} flex items-center justify-center text-white shadow-md`}>
+                  <s.icon size={20} />
+                </div>
+                {s.alert && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-600 bg-rose-50 rounded-full px-2 py-0.5">
+                    <AlertTriangle size={10} /> Action needed
+                  </span>
+                )}
               </div>
-              {s.alert && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-600 bg-rose-50 rounded-full px-2 py-0.5">
-                  <AlertTriangle size={10} /> Action needed
-                </span>
-              )}
+              <p className="mt-4 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                {s.label}
+              </p>
+              <p className="mt-1 text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">
+                {s.value}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{s.sub}</p>
+            </>
+          );
+          return s.href ? (
+            <Link
+              key={s.label}
+              href={s.href}
+              className={`card card-hover p-5 block ${s.alert ? "ring-2 ring-rose-200" : ""}`}
+              title={`View ${s.label.toLowerCase()}`}
+            >
+              {contents}
+            </Link>
+          ) : (
+            <div
+              key={s.label}
+              className={`card card-hover p-5 ${s.alert ? "ring-2 ring-rose-200" : ""}`}
+            >
+              {contents}
             </div>
-            <p className="mt-4 text-[11px] font-medium uppercase tracking-wider text-slate-400">
-              {s.label}
-            </p>
-            <p className="mt-1 text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">
-              {s.value}
-            </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">{s.sub}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Revenue */}
-        <div className="card p-6 lg:col-span-2">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="font-semibold text-slate-900">Revenue Overview</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Last 6 months billed revenue</p>
+        {viewFinancials ? (
+          <>
+            <div className="card p-6 lg:col-span-2">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="font-semibold text-slate-900">Revenue Overview</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">Last 6 months billed revenue</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-3 py-1">
+                  <ArrowUpRight size={13} /> {formatINR(summary?.totalRevenue ?? 0)}
+                </div>
+              </div>
+              {revenue.length ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={revenue} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.25} />
+                        <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef0f5" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#94a3b8" }} dy={6} />
+                    <YAxis axisLine={false} tickLine={false} fontSize={11} tick={{ fill: "#94a3b8" }} tickFormatter={(v) => `₹${v >= 1000 ? `${v / 1000}k` : v}`} />
+                    <Tooltip
+                      formatter={(value) => [formatINR(value), "Revenue"]}
+                      contentStyle={{ borderRadius: 12, border: "1px solid #e8eaf0", boxShadow: "0 10px 15px -3px rgba(15,23,42,.1)", fontSize: 12 }}
+                    />
+                    <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2.5} fill="url(#revenueFill)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-slate-400 py-16 text-center">No revenue data yet</p>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-3 py-1">
-              <ArrowUpRight size={13} /> {formatINR(summary?.totalRevenue ?? 0)}
+          </>
+        ) : (
+          <div className="card p-6 lg:col-span-2 flex flex-col items-center justify-center text-center">
+            <div className="h-12 w-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center">
+              <IndianRupee size={20} />
             </div>
+            <h2 className="mt-3 font-semibold text-slate-900">Financial data hidden</h2>
+            <p className="text-sm text-slate-500 mt-1 max-w-sm">
+              Your account does not have permission to view revenue and billing data. Ask an admin to enable it from Staff settings.
+            </p>
           </div>
-          {revenue.length ? (
-            <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={revenue} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#4f46e5" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#4f46e5" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef0f5" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={12} tick={{ fill: "#94a3b8" }} dy={6} />
-                <YAxis axisLine={false} tickLine={false} fontSize={11} tick={{ fill: "#94a3b8" }} tickFormatter={(v) => `₹${v >= 1000 ? `${v / 1000}k` : v}`} />
-                <Tooltip
-                  formatter={(value) => [formatINR(value), "Revenue"]}
-                  contentStyle={{ borderRadius: 12, border: "1px solid #e8eaf0", boxShadow: "0 10px 15px -3px rgba(15,23,42,.1)", fontSize: 12 }}
-                />
-                <Area type="monotone" dataKey="revenue" stroke="#4f46e5" strokeWidth={2.5} fill="url(#revenueFill)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-sm text-slate-400 py-16 text-center">No revenue data yet</p>
-          )}
-        </div>
+        )}
 
         {/* Upcoming deadlines */}
         <UpcomingDeadlinesCard items={upcoming} />
@@ -274,12 +321,14 @@ export default function DashboardPage() {
           </div>
           <ul className="space-y-3">
             {complianceData.map((d) => (
-              <li key={d.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
-                  <span className="text-sm text-slate-600">{d.name}</span>
-                </div>
-                <span className="text-sm font-bold text-slate-900">{d.value}</span>
+              <li key={d.name}>
+                <Link href={d.href} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
+                    <span className="text-sm text-slate-600 group-hover:text-slate-900">{d.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 group-hover:underline">{d.value}</span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -309,12 +358,14 @@ export default function DashboardPage() {
           </div>
           <ul className="space-y-3">
             {taskData.map((d) => (
-              <li key={d.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
-                  <span className="text-sm text-slate-600">{d.name}</span>
-                </div>
-                <span className="text-sm font-bold text-slate-900">{d.value}</span>
+              <li key={d.name}>
+                <Link href={d.href} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-2.5">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: d.color }} />
+                    <span className="text-sm text-slate-600 group-hover:text-slate-900">{d.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900 group-hover:underline">{d.value}</span>
+                </Link>
               </li>
             ))}
           </ul>

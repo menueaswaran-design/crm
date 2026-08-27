@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
     avatarUrl: { type: String },
     isActive: { type: Boolean, default: true },
     permissions: [{ type: String }],
+    dashboardFinancials: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

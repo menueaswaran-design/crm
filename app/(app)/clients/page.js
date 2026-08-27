@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, FileSpreadsheet, LayoutGrid, Table2, Download, List } from "lucide-react";
-import * as XLSX from "xlsx";
 import { getList, deleteData, buildQuery } from "@/lib/client";
+import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/context/AuthContext";
 import ClientCard from "@/components/clients/ClientCard";
@@ -16,7 +16,8 @@ import Pagination from "@/components/common/Pagination";
 import EmptyState from "@/components/common/EmptyState";
 import { SkeletonCards } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
-import { CLIENT_CATEGORIES } from "@/lib/utils";
+import ErrorBanner from "@/components/common/ErrorBanner";
+import { CLIENT_CATEGORIES, getErrorMessage } from "@/lib/utils";
 
 export default function ClientsPage() {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ export default function ClientsPage() {
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [view, setView] = useState("grid");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -38,9 +40,11 @@ export default function ClientsPage() {
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [exporting, setExporting] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const { data, pagination } = await getList(
         `/api/clients${buildQuery({
@@ -54,6 +58,8 @@ export default function ClientsPage() {
       setClients(data);
       setTotal(pagination.total || 0);
       setTotalPages(pagination.totalPages || 1);
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -81,50 +87,39 @@ export default function ClientsPage() {
     }
   };
 
-  const exportCsv = () => {
-    const headers = ["Name", "Category", "PAN", "GSTIN", "Email", "Phone", "Staff", "Status"];
-    const rows = clients.map((c) => [
-      c.name,
-      c.category || "",
-      c.pan || "",
-      c.gstin || "",
-      c.email || "",
-      c.phone || "",
-      c.assignedStaff?.name || "",
-      c.status || "",
-    ]);
-    const csv = [headers, ...rows]
-      .map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8;" }), "csv");
-  };
-
-  const exportExcel = () => {
-    const rows = clients.map((c) => ({
-      Name: c.name,
-      Category: c.category || "",
-      PAN: c.pan || "",
-      GSTIN: c.gstin || "",
-      Email: c.email || "",
-      Phone: c.phone || "",
-      Staff: c.assignedStaff?.name || "",
-      Status: c.status || "",
-      Added: c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-IN") : "",
-    }));
-    const ws = XLSX.utils.json_to_sheet(rows);
-    ws["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 10 }, { wch: 12 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Clients");
-    XLSX.writeFile(wb, `clients-${new Date().toISOString().slice(0, 10)}.xlsx`);
-  };
-
-  const downloadBlob = (blob, ext) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `clients-${new Date().toISOString().slice(0, 10)}.${ext}`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExport = async (format) => {
+    if (exporting) return;
+    setExporting(format);
+    try {
+      const all = await fetchAllList("/api/clients", {
+        search: debouncedSearch,
+        category,
+        assigned: isAdmin ? assigned : "",
+      });
+      const rows = all.map((c) => ({
+        "Client ID": c.clientCode || "",
+        Name: c.name,
+        Category: c.category || "",
+        PAN: c.pan || "",
+        GSTIN: c.gstin || "",
+        Email: c.email || "",
+        Phone: c.phone || "",
+        Staff: c.assignedStaff?.name || "",
+        Status: c.status || "",
+        Added: c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-IN") : "",
+      }));
+      if (format === "csv") {
+        downloadCSV({
+          filename: "clients",
+          headers: Object.keys(rows[0] || {}),
+          rows: rows.map((r) => Object.values(r)),
+        });
+      } else {
+        downloadExcel({ filename: "clients", sheetName: "Clients", rows });
+      }
+    } finally {
+      setExporting(null);
+    }
   };
 
   return (
@@ -158,10 +153,10 @@ export default function ClientsPage() {
               <List size={15} />
             </button>
           </div>
-          <Button variant="secondary" size="sm" onClick={exportCsv} disabled={clients.length === 0}>
+          <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
             <Download size={15} /> CSV
           </Button>
-          <Button variant="secondary" size="sm" onClick={exportExcel} disabled={clients.length === 0}>
+          <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
             <Download size={15} /> Excel
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
@@ -172,6 +167,8 @@ export default function ClientsPage() {
           </Button>
         </div>
       </div>
+
+      {error && <ErrorBanner message={error} onRetry={load} />}
 
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-0 sm:min-w-56">
