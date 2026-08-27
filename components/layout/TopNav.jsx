@@ -12,6 +12,7 @@ import {
   Receipt,
   UserCog,
   Scale,
+  Settings,
   Menu,
   X,
 } from "lucide-react";
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/documents", label: "Documents", icon: FolderOpen, permission: "documents" },
   { href: "/invoices", label: "Invoices", icon: Receipt, permission: "invoices" },
   { href: "/staff", label: "Staff", icon: UserCog, permission: "__admin_only" },
+  { href: "/settings", label: "Settings", icon: Settings, permission: "__admin_only" },
 ];
 
 export default function TopNav() {

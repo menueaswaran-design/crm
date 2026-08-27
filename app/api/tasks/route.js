@@ -6,6 +6,7 @@ import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
 import { deriveTaskStatus } from "@/lib/status";
+import { sendTaskAssignedEmail } from "@/lib/taskEmails";
 
 const STATUS_MAP = {
   pending: "PENDING",
@@ -151,6 +152,15 @@ export async function POST(request) {
         message: `Task "${task.title}" has been assigned to you.`,
         entityType: "Task",
         entityId: task._id,
+      });
+
+      await sendTaskAssignedEmail({
+        taskTitle: task.title,
+        clientName: client?.name,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        assignedBy: user.name,
+        assignedToId: assignedTo,
       });
     }
 

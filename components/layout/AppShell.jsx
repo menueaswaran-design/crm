@@ -28,7 +28,9 @@ export default function AppShell({ children }) {
 
   const segment = `/${(pathname.split("/")[1] || "").replace(/\/$/, "")}`;
   const permissionKey = PATH_TO_PERMISSION[segment];
-  const denied = user && !hasPermission(user, permissionKey);
+  const adminOnly = segment === "/settings";
+  const denied =
+    user && (adminOnly ? user.role !== "admin" : !hasPermission(user, permissionKey));
   const firstAllowed = NAV_PERMISSIONS.find((p) => hasPermission(user, p.key))?.href || "/dashboard";
 
   return (
