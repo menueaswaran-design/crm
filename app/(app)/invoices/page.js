@@ -5,7 +5,7 @@ import { Plus, ReceiptText, Download } from "lucide-react";
 import { getList, deleteData, buildQuery, apiFetch } from "@/lib/client";
 import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { formatINR, formatDate, getErrorMessage } from "@/lib/utils";
-import InvoiceTable from "@/components/invoices/InvoiceTable";
+import InvoiceCards from "@/components/invoices/InvoiceCards";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import PaymentModal from "@/components/invoices/PaymentModal";
 import InvoiceSummaryCards from "@/components/invoices/InvoiceSummaryCards";
@@ -184,7 +184,7 @@ export default function InvoicesPage() {
           action={<Button onClick={() => setFormOpen(true)}><Plus size={16} /> Create Invoice</Button>}
         />
       ) : (
-        <InvoiceTable invoices={invoices} onPayment={setPaying} onDelete={setDeleting} />
+        <InvoiceCards invoices={invoices} onPayment={setPaying} onDelete={setDeleting} />
       )}
 
       <Pagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
