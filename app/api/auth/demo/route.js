@@ -17,6 +17,7 @@ export async function POST(request) {
     const body = await request.json();
     const email = (body.email || "").toLowerCase().trim();
     const name = (body.name || "").trim();
+    const password = String(body.password || "");
     const requestedRole = body.role || "staff";
 
     if (!email) return fail("Email is required.", 400);
@@ -35,6 +36,14 @@ export async function POST(request) {
       });
     }
     if (!user.isActive) return fail("This account is inactive.", 403);
+
+    // If the account has a password set (e.g. via password reset), require it.
+    if (user.passwordHash) {
+      const { verifyPassword } = await import("@/lib/password");
+      if (!(await verifyPassword(password, user.passwordHash))) {
+        return fail("Invalid email or password.", 401);
+      }
+    }
 
     const token = await createDemoToken(user);
 

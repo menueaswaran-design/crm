@@ -17,19 +17,40 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setStatus("");
     setLoading(true);
 
-    if (demoMode) {
-      setStatus("Demo mode: password reset is handled by Firebase Authentication in production.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const app = getFirebaseApp();
-      const auth = getAuth(app);
-      await sendPasswordResetEmail(auth, email);
-      setStatus("If an account exists for that email, a reset link has been sent.");
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json.message || "Unable to send reset email. Please try again.");
+        return;
+      }
+
+      setStatus(json.message || "If an account exists for that email, a reset link has been sent.");
+
+      // Server couldn't deliver the email → fall back to Firebase's own sender
+      // (works for accounts registered in Firebase Auth).
+      if (!json.sent) {
+        if (!demoMode) {
+          try {
+            const app = getFirebaseApp();
+            const auth = getAuth(app);
+            await sendPasswordResetEmail(auth, email);
+            setStatus("If an account exists for that email, a reset link has been sent.");
+          } catch (firebaseErr) {
+            if (json.hint) setStatus(json.hint);
+          }
+        } else if (json.hint) {
+          setStatus(json.hint);
+        }
+      }
     } catch (err) {
       setError(err.message || "Unable to send reset email. Please try again.");
     } finally {
