@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const TOKEN_COOKIE = "crm_token";
-const PUBLIC_PATHS = ["/login", "/forgot-password", "/api/auth", "/_next", "/favicon.ico", "/public"];
+const PUBLIC_PATHS = ["/login", "/forgot-password", "/reset-password", "/api/auth", "/_next", "/favicon.ico", "/public"];
 
 export function proxy(request) {
   const { pathname } = request.nextUrl;
@@ -16,7 +16,7 @@ export function proxy(request) {
   if (isPublic) {
     // Already logged in users skip the login page.
     if (pathname === "/login" && token) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }

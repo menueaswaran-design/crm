@@ -5,11 +5,11 @@ import { Plus, Trash2 } from "lucide-react";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import { Input, Select, Textarea } from "@/components/common/Field";
-import { postData, patchData, apiFetch } from "@/lib/client";
+import ClientSearchPicker from "@/components/clients/ClientSearchPicker";
+import { postData, patchData } from "@/lib/client";
 import { INVOICE_SERVICE_TYPES, formatINR } from "@/lib/utils";
 
 export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
-  const [clients, setClients] = useState([]);
   const [clientId, setClientId] = useState("");
   const [invoiceDate, setInvoiceDate] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -37,14 +37,6 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
         setItems([{ description: "", serviceType: "GST Filing", quantity: 1, amount: 0 }]);
         setNotes("");
       }
-      (async () => {
-        try {
-          const json = await apiFetch("/api/clients?limit=100");
-          setClients(json.data || []);
-        } catch {
-          // ignore
-        }
-      })();
     }
   }, [open, invoice]);
 
@@ -127,14 +119,12 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Client" required value={clientId} onChange={(e) => setClientId(e.target.value)}>
-            <option value="">Select client...</option>
-            {clients.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <ClientSearchPicker
+            value={clientId}
+            onChange={setClientId}
+            selectedClient={invoice?.clientId}
+            required
+          />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Invoice Date" type="date" required value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
             <Input label="Due Date" type="date" required value={dueDate} onChange={(e) => setDueDate(e.target.value)} />

@@ -24,8 +24,10 @@ import {
 } from "lucide-react";
 import { apiFetch, deleteData } from "@/lib/client";
 import { maskAadhaar, formatDate, daysRemaining, getErrorMessage } from "@/lib/utils";
+import { generateClientMessage } from "@/lib/whatsappMessages";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
@@ -74,9 +76,22 @@ export default function ClientDetailsPage() {
         <ErrorBanner message={error} onRetry={load} />
       </div>
     );
-  if (!data) return <EmptyState title="Client not found" />;
+  if (!data) {
+    return (
+      <EmptyState
+        variant="unavailable"
+        title="Client not found"
+        description="This client may have been deleted or you do not have access."
+        action={
+          <Button variant="secondary" onClick={() => router.push("/clients")}>
+            <ArrowLeft size={14} /> Back to Clients
+          </Button>
+        }
+      />
+    );
+  }
 
-  const { client, compliance, tasks, documents, invoices, activities } = data;
+  const { client, compliance, tasks, documents, invoices, activities, counts = {} } = data;
   const gradient = CATEGORY_GRADIENTS[client.category] || CATEGORY_GRADIENTS.Other;
 
   const incomeTaxRecords = compliance.filter((c) => c.category === "Income Tax");
@@ -101,10 +116,10 @@ export default function ClientDetailsPage() {
   ];
 
   const statTiles = [
-    { label: "Compliance", value: compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
-    { label: "Tasks", value: tasks.length, icon: CheckSquare, cls: "bg-sky-50 text-sky-600", href: "/tasks" },
-    { label: "Documents", value: documents.length, icon: FileText, cls: "bg-brand-50 text-brand-600", href: "/documents" },
-    { label: "Invoices", value: invoices.length, icon: Receipt, cls: "bg-emerald-50 text-emerald-600", href: "/invoices" },
+    { label: "Compliance", value: counts.compliance ?? compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
+    { label: "Tasks", value: counts.tasks ?? tasks.length, icon: CheckSquare, cls: "bg-sky-50 text-sky-600", href: "/tasks" },
+    { label: "Documents", value: counts.documents ?? documents.length, icon: FileText, cls: "bg-brand-50 text-brand-600", href: "/documents" },
+    { label: "Invoices", value: counts.invoices ?? invoices.length, icon: Receipt, cls: "bg-emerald-50 text-emerald-600", href: "/invoices" },
   ];
 
   const confirmDelete = async () => {
@@ -147,6 +162,14 @@ export default function ClientDetailsPage() {
                   <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(true)} className="text-rose-600 hover:bg-rose-50">
                     <Trash2 size={13} /> Delete
                   </Button>
+                  <WhatsAppButton
+                    phone={client.phone}
+                    client={client}
+                    clientId={client._id}
+                    message={generateClientMessage({ client })}
+                    label="WhatsApp"
+                    messageType="CLIENT_MESSAGE"
+                  />
                 </div>
               </div>
             </div>
@@ -256,7 +279,7 @@ export default function ClientDetailsPage() {
               </Link>
             </div>
             {compliance.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">No compliance records</p>
+              <EmptyState compact title="No compliance records" description="Filings for this client will appear here." />
             ) : (
               <ul className="divide-y divide-slate-50">
                 {compliance.slice(0, 5).map((c) => (
@@ -288,7 +311,7 @@ export default function ClientDetailsPage() {
                 </Link>
               </div>
               {tasks.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">No tasks</p>
+                <EmptyState compact title="No tasks" description="Tasks linked to this client will appear here." />
               ) : (
                 <ul className="space-y-2.5">
                   {tasks.slice(0, 5).map((t) => (
@@ -312,7 +335,7 @@ export default function ClientDetailsPage() {
                 </Link>
               </div>
               {documents.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">No documents</p>
+                <EmptyState compact title="No documents" description="Uploaded files for this client will appear here." />
               ) : (
                 <ul className="space-y-2.5">
                   {documents.slice(0, 5).map((d) => (
@@ -339,7 +362,7 @@ export default function ClientDetailsPage() {
               </Link>
             </div>
             {invoices.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">No invoices</p>
+              <EmptyState compact title="No invoices" description="Billing records for this client will appear here." />
             ) : (
               <ul className="divide-y divide-slate-50">
                 {invoices.slice(0, 5).map((inv) => (
@@ -363,7 +386,7 @@ export default function ClientDetailsPage() {
           <div className="card p-6">
             <h2 className="font-semibold text-slate-900 mb-4">Activity</h2>
             {activities.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6 text-center">No activity recorded</p>
+              <EmptyState compact title="No activity" description="Recent actions for this client will appear here." />
             ) : (
               <ul className="divide-y divide-slate-50">
                 {activities.map((a) => (

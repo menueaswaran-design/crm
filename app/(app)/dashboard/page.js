@@ -29,6 +29,7 @@ import { apiFetch } from "@/lib/client";
 import { getErrorMessage, formatINR, formatDate } from "@/lib/utils";
 import { canViewFinancials } from "@/lib/permissions";
 import ErrorBanner from "@/components/common/ErrorBanner";
+import EmptyState from "@/components/common/EmptyState";
 import UpcomingDeadlinesCard from "@/components/dashboard/UpcomingDeadlinesCard";
 
 export default function DashboardPage() {
@@ -99,6 +100,7 @@ export default function DashboardPage() {
       icon: Users,
       tile: "from-brand-500 to-brand-700",
       sub: "client records",
+      href: "/clients?all=1",
     },
     {
       label: "Active Compliance",
@@ -159,6 +161,7 @@ export default function DashboardPage() {
       icon: FolderOpen,
       tile: "from-slate-500 to-slate-700",
       sub: "stored securely",
+      href: "/documents",
     },
   ];
 
@@ -282,7 +285,13 @@ export default function DashboardPage() {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-slate-400 py-16 text-center">No revenue data yet</p>
+                <EmptyState
+                  compact
+                  variant="unavailable"
+                  title="No revenue data yet"
+                  description="Invoice totals will appear here once billing starts."
+                  className="py-12"
+                />
               )}
             </div>
           </>
@@ -331,6 +340,9 @@ export default function DashboardPage() {
                 </Link>
               </li>
             ))}
+            {complianceTotal <= 1 && complianceData.every((d) => d.value === 0) && (
+              <li className="text-xs text-slate-400 text-center pt-2">No compliance records yet</li>
+            )}
           </ul>
           <Link
             href="/compliance"
@@ -368,6 +380,9 @@ export default function DashboardPage() {
                 </Link>
               </li>
             ))}
+            {taskTotal <= 1 && taskData.every((d) => d.value === 0) && (
+              <li className="text-xs text-slate-400 text-center pt-2">No tasks yet</li>
+            )}
           </ul>
           <Link
             href="/tasks"
@@ -387,7 +402,12 @@ export default function DashboardPage() {
             <Activity size={18} className="text-slate-300" />
           </div>
           {activity.length === 0 ? (
-            <p className="text-sm text-slate-400 py-10 text-center">No recent activity</p>
+            <EmptyState
+              compact
+              title="No recent activity"
+              description="Actions across clients, compliance and tasks will show here."
+              className="py-8"
+            />
           ) : (
             <ul className="space-y-4">
               {activity.slice(0, 6).map((a) => (

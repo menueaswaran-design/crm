@@ -14,8 +14,10 @@ import {
 } from "lucide-react";
 import { StatusBadge, PriorityBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import { patchData } from "@/lib/client";
 import { formatDate, daysRemaining } from "@/lib/utils";
+import { generateDocumentRequestMessage } from "@/lib/whatsappMessages";
 
 export default function ComplianceCard({ record, onEdit, onDelete, onStatusChange }) {
   const [status, setStatus] = useState(record.status);
@@ -139,7 +141,7 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
       </div>
 
       {!isCompleted && (
-        <div className="mt-4 pt-4 border-t border-slate-100 flex gap-2">
+        <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap gap-2">
           {status === "PENDING" && (
             <Button size="sm" variant="secondary" onClick={() => changeStatus("IN_PROGRESS")} loading={updating}>
               <PlayCircle size={14} /> Start
@@ -153,6 +155,21 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
           <Button size="sm" variant="success" onClick={() => changeStatus("COMPLETED")} loading={updating}>
             <CheckCircle2 size={14} /> Complete
           </Button>
+          {record.clientId?.phone && (
+            <WhatsAppButton
+              phone={record.clientId.phone}
+              client={record.clientId}
+              clientId={record.clientId._id}
+              message={generateDocumentRequestMessage({
+                client: record.clientId,
+                documents: [],
+                period: record.financialYear || record.period || null,
+              })}
+              label="Request docs"
+              messageType="DOCUMENT_REQUEST"
+              iconOnly
+            />
+          )}
         </div>
       )}
 

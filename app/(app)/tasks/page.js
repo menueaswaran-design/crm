@@ -194,11 +194,12 @@ function TasksPage() {
         <SkeletonCards count={6} />
       ) : tasks.length === 0 ? (
         <EmptyState
+          variant="unavailable"
           title="No tasks found"
           description={
             assigned === "unassigned"
-              ? "No unassigned tasks right now."
-              : "Create a task to assign work to your team."
+              ? "No unassigned tasks match your filters."
+              : "No tasks match your current filters. Create one to assign work to your team."
           }
           action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Create Task</Button>}
         />

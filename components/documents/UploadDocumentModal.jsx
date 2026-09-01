@@ -5,6 +5,7 @@ import { UploadCloud } from "lucide-react";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import { Select } from "@/components/common/Field";
+import ClientSearchPicker from "@/components/clients/ClientSearchPicker";
 import { apiFetch } from "@/lib/client";
 import { DOCUMENT_CATEGORIES } from "@/lib/utils";
 
@@ -12,7 +13,6 @@ const MAX_SIZE = 10 * 1024 * 1024;
 const ACCEPT = ".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png";
 
 export default function UploadDocumentModal({ open, onClose, onUploaded, clientId }) {
-  const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(clientId || "");
   const [category, setCategory] = useState("GST");
   const [file, setFile] = useState(null);
@@ -25,14 +25,6 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
       setCategory("GST");
       setFile(null);
       setError("");
-      (async () => {
-        try {
-          const json = await apiFetch("/api/clients?limit=100");
-          setClients(json.data || []);
-        } catch {
-          // ignore
-        }
-      })();
     }
   }, [open, clientId]);
 
@@ -98,14 +90,12 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
           <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-xs text-red-700">{error}</div>
         )}
 
-        <Select label="Client" required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)}>
-          <option value="">Select client...</option>
-          {clients.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name}
-            </option>
-          ))}
-        </Select>
+        <ClientSearchPicker
+          value={selectedClient}
+          onChange={setSelectedClient}
+          selectedClient={clientId ? { _id: clientId } : null}
+          required
+        />
 
         <Select label="Category" required value={category} onChange={(e) => setCategory(e.target.value)}>
           {DOCUMENT_CATEGORIES.map((c) => (

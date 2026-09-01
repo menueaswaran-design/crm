@@ -3,7 +3,9 @@
 import { Eye, Download, Trash2, Banknote, ReceiptText } from "lucide-react";
 import { StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import { formatINR, formatDate, daysRemaining } from "@/lib/utils";
+import { generatePaymentReminderMessage } from "@/lib/whatsappMessages";
 
 const STATUS_TILE = {
   PAID: "bg-emerald-500",
@@ -66,6 +68,18 @@ export default function InvoiceCards({ invoices, onPayment, onDelete }) {
                   <Banknote size={13} /> Payment
                 </Button>
               )}
+              {inv.outstandingAmount > 0 && inv.clientId?.phone && (
+                <WhatsAppButton
+                  phone={inv.clientId.phone}
+                  client={inv.clientId}
+                  clientId={inv.clientId._id}
+                  message={generatePaymentReminderMessage({ client: inv.clientId, invoice: inv })}
+                  label="Payment reminder"
+                  messageType="PAYMENT_REMINDER"
+                  iconOnly
+                  className="hidden sm:inline-flex"
+                />
+              )}
               <button
                 onClick={() => window.open(`/api/invoices/${inv._id}/view`, "_blank")}
                 className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
@@ -78,8 +92,8 @@ export default function InvoiceCards({ invoices, onPayment, onDelete }) {
                 href={`/api/invoices/${inv._id}/download`}
                 download
                 className="shrink-0 inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
-                aria-label="Download invoice"
-                title="Download invoice"
+                aria-label="Download invoice Excel"
+                title="Download Excel"
               >
                 <Download size={15} />
               </a>

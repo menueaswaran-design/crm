@@ -16,6 +16,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { resolvePostLoginRedirect } from "@/lib/permissions";
 import Button from "@/components/common/Button";
 
 export default function LoginPage() {
@@ -43,7 +44,7 @@ const FEATURES = [
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/dashboard";
+  const requestedRedirect = searchParams.get("redirect");
   const { user, login } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -57,16 +58,16 @@ function LoginContent() {
   const demoMode = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
 
   useEffect(() => {
-    if (user) router.push(redirect);
-  }, [user, redirect, router]);
+    if (user) router.push(resolvePostLoginRedirect(user, requestedRedirect));
+  }, [user, requestedRedirect, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await login({ email, password, role });
-      router.push(redirect);
+      const loggedInUser = await login({ email, password, role });
+      router.push(resolvePostLoginRedirect(loggedInUser, requestedRedirect));
     } catch (err) {
       setError(err.message || "Unable to sign in. Please check your credentials.");
     } finally {
@@ -82,8 +83,8 @@ function LoginContent() {
         ? { email: "admin@caoffice.com", password: "demo123", role: "admin" }
         : { email: "priya@caoffice.com", password: "demo123", role: "staff" };
     try {
-      await login(creds);
-      router.push("/dashboard");
+      const loggedInUser = await login(creds);
+      router.push(resolvePostLoginRedirect(loggedInUser));
     } catch (err) {
       setError(err.message || "Demo login failed.");
     } finally {

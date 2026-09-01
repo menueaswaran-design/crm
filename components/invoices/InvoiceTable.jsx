@@ -1,9 +1,11 @@
 "use client";
 
-import { Banknote, Trash2, FileDown } from "lucide-react";
+import { Banknote, Trash2, FileDown, Eye, Download } from "lucide-react";
 import { StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import { formatINR, formatDate } from "@/lib/utils";
+import { generatePaymentReminderMessage } from "@/lib/whatsappMessages";
 
 export default function InvoiceTable({ invoices, onPayment, onDelete }) {
   return (
@@ -48,6 +50,34 @@ export default function InvoiceTable({ invoices, onPayment, onDelete }) {
                         <Banknote size={13} /> Payment
                       </Button>
                     )}
+                    {inv.outstandingAmount > 0 && inv.clientId?.phone && (
+                      <WhatsAppButton
+                        phone={inv.clientId.phone}
+                        client={inv.clientId}
+                        clientId={inv.clientId._id}
+                        message={generatePaymentReminderMessage({ client: inv.clientId, invoice: inv })}
+                        label="Payment reminder"
+                        messageType="PAYMENT_REMINDER"
+                        iconOnly
+                      />
+                    )}
+                    <button
+                      onClick={() => window.open(`/api/invoices/${inv._id}/view`, "_blank")}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                      aria-label="View invoice"
+                      title="View invoice"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <a
+                      href={`/api/invoices/${inv._id}/download`}
+                      download
+                      className="inline-flex p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      aria-label="Download invoice Excel"
+                      title="Download Excel"
+                    >
+                      <Download size={14} />
+                    </a>
                     {onDelete && (
                       <button
                         onClick={() => onDelete(inv)}

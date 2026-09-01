@@ -7,6 +7,7 @@ import { z } from "zod";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import { Input, Select, Textarea } from "@/components/common/Field";
+import ClientSearchPicker from "@/components/clients/ClientSearchPicker";
 import { postData, patchData, apiFetch } from "@/lib/client";
 import { COMPLIANCE_TYPES, COMPLIANCE_CATEGORIES } from "@/lib/utils";
 
@@ -24,7 +25,6 @@ const schema = z.object({
 });
 
 export default function ComplianceForm({ open, onClose, record, onSaved }) {
-  const [clients, setClients] = useState([]);
   const [staff, setStaff] = useState([]);
   const [serverError, setServerError] = useState("");
 
@@ -32,6 +32,8 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema) });
 
@@ -71,11 +73,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
   useEffect(() => {
     (async () => {
       try {
-        const [c, u] = await Promise.all([
-          apiFetch("/api/clients?limit=100"),
-          apiFetch("/api/users"),
-        ]);
-        setClients(c.data || []);
+        const u = await apiFetch("/api/users");
         setStaff((u.data || []).filter((s) => s.role !== "admin"));
       } catch {
         // ignore
@@ -126,14 +124,13 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
       )}
       <form id="compliance-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Select label="Client" required error={errors.clientId?.message} {...register("clientId")}>
-            <option value="">Select client...</option>
-            {clients.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <ClientSearchPicker
+            value={watch("clientId")}
+            onChange={(id) => setValue("clientId", id, { shouldValidate: true })}
+            selectedClient={record?.clientId}
+            error={errors.clientId?.message}
+            required
+          />
           <Select label="Compliance Type" required error={errors.type?.message} {...register("type")}>
             {COMPLIANCE_TYPES.map((t) => (
               <option key={t} value={t}>

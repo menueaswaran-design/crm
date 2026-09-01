@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarDays, User, Building2, CheckCircle2, PlayCircle, Trash2, Pencil } from "lucide-react";
+import { CalendarDays, User, Building2, CheckCircle2, PlayCircle, Trash2, Pencil, MessageSquare } from "lucide-react";
 import { StatusBadge, PriorityBadge, CategoryBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
+import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import { patchData } from "@/lib/client";
 import { formatDate, daysRemaining } from "@/lib/utils";
+import { generateTaskReminderMessage } from "@/lib/whatsappMessages";
 
 export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   const [updating, setUpdating] = useState(false);
@@ -82,6 +84,18 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
           <Button size="sm" variant="success" onClick={() => changeStatus("COMPLETED")} disabled={updating}>
             <CheckCircle2 size={14} /> Complete
           </Button>
+          {task.clientId?.phone && (
+            <WhatsAppButton
+              phone={task.clientId.phone}
+              client={task.clientId}
+              clientId={task.clientId._id}
+              message={generateTaskReminderMessage({ client: task.clientId, task })}
+              label="WhatsApp"
+              messageType="TASK_REMINDER"
+              variant="secondary"
+              size="sm"
+            />
+          )}
         </div>
       )}
     </div>

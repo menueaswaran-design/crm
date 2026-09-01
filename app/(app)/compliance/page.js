@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { Plus, Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { getList, deleteData, buildQuery } from "@/lib/client";
+import { getList, deleteData, buildQuery, apiFetch } from "@/lib/client";
 import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { useAuth } from "@/context/AuthContext";
 import ComplianceCard from "@/components/compliance/ComplianceCard";
@@ -79,20 +79,12 @@ function CompliancePage() {
 
   const loadCounts = useCallback(async () => {
     try {
-      const c = {};
-      for (const t of TABS) {
-        const status = t === "All" ? "" : t.toUpperCase().replace(" ", "_");
-        const r = await fetch(
-          `/api/compliance${buildQuery({
-            status,
-            assigned: isAdmin ? assigned : "",
-            limit: 1,
-          })}`
-        );
-        const j = await r.json();
-        c[t] = j.pagination?.total || 0;
-      }
-      setCounts(c);
+      const json = await apiFetch(
+        `/api/compliance/counts${buildQuery({
+          assigned: isAdmin ? assigned : "",
+        })}`
+      );
+      setCounts(json.data || {});
     } catch {
       // ignore
     }
@@ -256,11 +248,12 @@ function CompliancePage() {
             <SkeletonCards count={4} />
           ) : records.length === 0 ? (
             <EmptyState
+              variant="unavailable"
               title="No compliance records found"
               description={
                 assigned === "unassigned"
-                  ? "No unassigned compliance records right now."
-                  : "Create a compliance record to start tracking due dates."
+                  ? "No unassigned compliance records match your filters."
+                  : "No records match your current filters. Add one to start tracking due dates."
               }
               action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Add Compliance</Button>}
             />

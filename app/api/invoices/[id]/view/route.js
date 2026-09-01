@@ -5,6 +5,7 @@ import User from "@/models/User";
 import { fail } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { formatINR } from "@/lib/utils";
+import { FIRM_NAME } from "@/lib/config";
 
 function esc(str) {
   return String(str ?? "").replace(/[&<>"']/g, (c) =>
@@ -107,14 +108,14 @@ export async function GET(request, { params }) {
 <body>
 <div class="wrapper">
   <div class="toolbar">
-    <a class="download" href="/api/invoices/${invoice._id}/download" download>⬇ Download</a>
+    <a class="download" href="/api/invoices/${invoice._id}/download" download>⬇ Download Excel</a>
     <button class="print" onclick="window.print()">🖨 Print / Save PDF</button>
   </div>
   <div class="sheet">
     <div class="sheet-inner">
       <div class="head">
         <div class="brand">
-          <h1>TaxCraft</h1>
+          <h1>${esc(FIRM_NAME)}</h1>
           <p>Accounting &amp; Taxation Services</p>
         </div>
         <div class="doc-title">

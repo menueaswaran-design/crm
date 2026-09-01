@@ -10,6 +10,8 @@ import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission, requireAdmin } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 
+const RELATED_LIMIT = 20;
+
 export async function GET(request, { params }) {
   try {
     await dbConnect();
@@ -25,15 +27,42 @@ export async function GET(request, { params }) {
       return fail("You do not have access to this client.", 403);
     }
 
-    const [compliance, tasks, documents, invoices, activities] = await Promise.all([
-      Compliance.find({ clientId: id }).sort({ dueDate: 1 }).lean(),
-      Task.find({ clientId: id, isDeleted: { $ne: true } }).sort({ createdAt: -1 }).lean(),
-      Document.find({ clientId: id, isDeleted: { $ne: true } }).sort({ uploadedAt: -1 }).lean(),
-      Invoice.find({ clientId: id, isDeleted: { $ne: true } }).sort({ invoiceDate: -1 }).lean(),
+    const [
+      compliance,
+      complianceTotal,
+      tasks,
+      tasksTotal,
+      documents,
+      documentsTotal,
+      invoices,
+      invoicesTotal,
+      activities,
+    ] = await Promise.all([
+      Compliance.find({ clientId: id }).sort({ dueDate: 1 }).limit(RELATED_LIMIT).lean(),
+      Compliance.countDocuments({ clientId: id }),
+      Task.find({ clientId: id, isDeleted: { $ne: true } }).sort({ createdAt: -1 }).limit(RELATED_LIMIT).lean(),
+      Task.countDocuments({ clientId: id, isDeleted: { $ne: true } }),
+      Document.find({ clientId: id, isDeleted: { $ne: true } }).sort({ uploadedAt: -1 }).limit(RELATED_LIMIT).lean(),
+      Document.countDocuments({ clientId: id, isDeleted: { $ne: true } }),
+      Invoice.find({ clientId: id, isDeleted: { $ne: true } }).sort({ invoiceDate: -1 }).limit(RELATED_LIMIT).lean(),
+      Invoice.countDocuments({ clientId: id, isDeleted: { $ne: true } }),
       Activity.find({ entityId: id }).sort({ createdAt: -1 }).limit(20).lean(),
     ]);
 
-    return ok({ client, compliance, tasks, documents, invoices, activities });
+    return ok({
+      client,
+      compliance,
+      tasks,
+      documents,
+      invoices,
+      activities,
+      counts: {
+        compliance: complianceTotal,
+        tasks: tasksTotal,
+        documents: documentsTotal,
+        invoices: invoicesTotal,
+      },
+    });
   } catch (error) {
     return handleError(error);
   }

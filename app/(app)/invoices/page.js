@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Plus, ReceiptText, Download } from "lucide-react";
 import { getList, deleteData, buildQuery, apiFetch } from "@/lib/client";
-import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
-import { formatINR, formatDate, getErrorMessage } from "@/lib/utils";
+import { downloadCSV, downloadExcel, fetchAllList, formatExportCurrency, roundMoney } from "@/lib/export";
+import { formatDate, getErrorMessage } from "@/lib/utils";
 import InvoiceCards from "@/components/invoices/InvoiceCards";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import PaymentModal from "@/components/invoices/PaymentModal";
@@ -95,6 +95,9 @@ export default function InvoicesPage() {
             "Client",
             "Invoice Date",
             "Due Date",
+            "Subtotal",
+            "GST Rate (%)",
+            "GST Amount",
             "Total Amount",
             "Paid Amount",
             "Outstanding",
@@ -105,9 +108,12 @@ export default function InvoicesPage() {
             inv.clientId?.name || "",
             formatDate(inv.invoiceDate),
             formatDate(inv.dueDate),
-            formatINR(inv.totalAmount),
-            formatINR(inv.paidAmount),
-            formatINR(inv.outstandingAmount),
+            formatExportCurrency(inv.subtotal),
+            Number(inv.gstRate) || 0,
+            formatExportCurrency(inv.gstAmount),
+            formatExportCurrency(inv.totalAmount),
+            formatExportCurrency(inv.paidAmount),
+            formatExportCurrency(inv.outstandingAmount),
             inv.status || "",
           ]),
         });
@@ -120,9 +126,12 @@ export default function InvoicesPage() {
             Client: inv.clientId?.name || "",
             "Invoice Date": formatDate(inv.invoiceDate),
             "Due Date": formatDate(inv.dueDate),
-            "Total Amount": inv.totalAmount ?? 0,
-            "Paid Amount": inv.paidAmount ?? 0,
-            Outstanding: inv.outstandingAmount ?? 0,
+            "Subtotal (INR)": roundMoney(inv.subtotal),
+            "GST Rate (%)": Number(inv.gstRate) || 0,
+            "GST Amount (INR)": roundMoney(inv.gstAmount),
+            "Total Amount (INR)": roundMoney(inv.totalAmount),
+            "Paid Amount (INR)": roundMoney(inv.paidAmount),
+            "Outstanding (INR)": roundMoney(inv.outstandingAmount),
             Status: inv.status || "",
           })),
         });
@@ -179,8 +188,9 @@ export default function InvoicesPage() {
         <SkeletonRows count={6} />
       ) : invoices.length === 0 ? (
         <EmptyState
+          variant="unavailable"
           title="No invoices found"
-          description="Create an invoice to bill your clients."
+          description="No invoices match your current filter. Create one to bill your clients."
           action={<Button onClick={() => setFormOpen(true)}><Plus size={16} /> Create Invoice</Button>}
         />
       ) : (

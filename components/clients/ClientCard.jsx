@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Trash2, Mail, Phone, IdCard, Building2, ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, Mail, Phone, IdCard, Building2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
+import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import { generateClientMessage } from "@/lib/whatsappMessages";
 
 function initials(name) {
   return (name || "")
@@ -16,8 +19,14 @@ function initials(name) {
 
 export default function ClientCard({ client, onEdit, onDelete }) {
   const unassigned = !client.assignedStaff;
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
+
+  const handleWhatsApp = () => {
+    setWhatsappOpen(true);
+  };
 
   return (
+    <>
     <div className="card p-4 flex flex-col">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -40,6 +49,16 @@ export default function ClientCard({ client, onEdit, onDelete }) {
           </div>
         </div>
         <div className="flex gap-0.5 shrink-0">
+          {client.phone && (
+            <button
+              onClick={handleWhatsApp}
+              className="p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+              aria-label="WhatsApp client"
+              title="WhatsApp client"
+            >
+              <MessageSquare size={15} />
+            </button>
+          )}
           <button
             onClick={() => onEdit(client)}
             className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -94,5 +113,15 @@ export default function ClientCard({ client, onEdit, onDelete }) {
         </Link>
       </div>
     </div>
+
+    <WhatsAppMessageModal
+      open={whatsappOpen}
+      onClose={() => setWhatsappOpen(false)}
+      client={client}
+      initialMessage={generateClientMessage({ client })}
+      clientId={client._id}
+      messageType="CLIENT_MESSAGE"
+    />
+    </>
   );
 }

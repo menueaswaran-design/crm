@@ -156,8 +156,9 @@ export default function DocumentsPage() {
         <SkeletonCards count={6} />
       ) : docs.length === 0 ? (
         <EmptyState
+          variant="unavailable"
           title="No documents found"
-          description="Upload client documents to organize them securely."
+          description="No documents match your search or filters. Upload files to organize them securely."
           action={<Button onClick={() => setUploadOpen(true)}><Upload size={16} /> Upload Document</Button>}
         />
       ) : (

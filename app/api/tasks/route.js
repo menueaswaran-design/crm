@@ -5,7 +5,7 @@ import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
-import { deriveTaskStatus } from "@/lib/status";
+import { deriveTaskStatus, buildTaskStatusFilter } from "@/lib/status";
 
 const STATUS_MAP = {
   pending: "PENDING",
@@ -58,43 +58,25 @@ export async function GET(request) {
       query.assignedTo = { $ne: null, $exists: true };
     }
 
-    // Status OVERDUE is derived — fetch a wider set then filter.
-    // For stored statuses, filter in Mongo when not overdue.
-    const needsDerivedFilter = Boolean(status);
-    const mongoQuery = { ...query };
-    if (status && status !== "OVERDUE") {
-      mongoQuery.status = status === "IN_PROGRESS" ? "IN_PROGRESS" : status;
-      // PENDING list should not include completed; overdue derived from pending/in_progress
-      if (status === "PENDING") mongoQuery.status = "PENDING";
+    if (status) {
+      Object.assign(query, buildTaskStatusFilter(status));
     }
 
-    const fetchLimit = needsDerivedFilter ? Math.min(limit * 5, 200) : limit;
-    const fetchSkip = needsDerivedFilter ? 0 : (page - 1) * limit;
-
-    const [tasks, totalRaw] = await Promise.all([
-      Task.find(mongoQuery)
-        .populate("clientId", "name")
+    const [tasks, total] = await Promise.all([
+      Task.find(query)
+        .populate("clientId", "name phone")
         .populate("assignedTo", "name email role")
         .populate("createdBy", "name")
         .sort({ dueDate: 1, priority: -1 })
-        .skip(fetchSkip)
-        .limit(fetchLimit)
+        .skip((page - 1) * limit)
+        .limit(limit)
         .lean(),
-      Task.countDocuments(mongoQuery),
+      Task.countDocuments(query),
     ]);
 
-    let list = tasks.map((t) => ({ ...t, derivedStatus: deriveTaskStatus(t) }));
+    const list = tasks.map((t) => ({ ...t, derivedStatus: deriveTaskStatus(t) }));
 
-    if (status) {
-      list = list.filter((t) => t.derivedStatus === status);
-    }
-
-    const total = status ? list.length : totalRaw;
-    const paged = status
-      ? list.slice((page - 1) * limit, page * limit)
-      : list;
-
-    return ok(paged, "", {
+    return ok(list, "", {
       pagination: {
         page,
         limit,

@@ -4,6 +4,7 @@ import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { nextClientCode } from "@/lib/counter";
+import { escapeRegex } from "@/lib/utils";
 
 const UNASSIGNED_QUERY = {
   $or: [{ assignedStaff: null }, { assignedStaff: { $exists: false } }],
@@ -29,14 +30,15 @@ export async function GET(request) {
     const and = [];
 
     if (search) {
+      const pattern = escapeRegex(search.trim());
       and.push({
         $or: [
-          { name: { $regex: search, $options: "i" } },
-          { clientCode: { $regex: search, $options: "i" } },
-          { pan: { $regex: search, $options: "i" } },
-          { gstin: { $regex: search, $options: "i" } },
-          { email: { $regex: search, $options: "i" } },
-          { phone: { $regex: search, $options: "i" } },
+          { name: { $regex: pattern, $options: "i" } },
+          { clientCode: { $regex: pattern, $options: "i" } },
+          { pan: { $regex: pattern, $options: "i" } },
+          { gstin: { $regex: pattern, $options: "i" } },
+          { email: { $regex: pattern, $options: "i" } },
+          { phone: { $regex: pattern, $options: "i" } },
         ],
       });
     }

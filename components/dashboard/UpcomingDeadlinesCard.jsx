@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, CalendarDays, Clock, ClipboardList } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { formatDate, daysRemaining } from "@/lib/utils";
+import EmptyState from "@/components/common/EmptyState";
 import DueCalendarModal from "@/components/dashboard/DueCalendarModal";
 
 /**
@@ -109,9 +110,16 @@ export default function UpcomingDeadlinesCard({ items = null, refreshKey = 0 }) 
           ))}
         </ul>
       ) : shown.length === 0 ? (
-        <p className="text-sm text-slate-400 py-10 text-center">
-          {view === "overdue" ? "Nothing overdue — all caught up" : "No upcoming deadlines"}
-        </p>
+        <EmptyState
+          compact
+          title={view === "overdue" ? "Nothing overdue" : "No upcoming deadlines"}
+          description={
+            view === "overdue"
+              ? "All compliance and tasks are on track."
+              : "Due dates from compliance and tasks will appear here."
+          }
+          className="py-6"
+        />
       ) : (
         <ul className="space-y-3.5">
           {shown.slice(0, view === "overdue" ? overdueItems.length : 6).map((item) => {

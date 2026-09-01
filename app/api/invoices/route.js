@@ -27,7 +27,7 @@ export async function GET(request) {
 
     const [invoices, total] = await Promise.all([
       Invoice.find(query)
-        .populate("clientId", "name category")
+        .populate("clientId", "name category phone")
         .sort({ invoiceDate: -1 })
         .skip((page - 1) * limit)
         .limit(limit)

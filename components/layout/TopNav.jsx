@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { initials } from "@/lib/utils";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, getDefaultRoute } from "@/lib/permissions";
 import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
 
@@ -40,7 +40,7 @@ export default function TopNav() {
     if (item.permission === "__admin_only") return user?.role === "admin";
     return hasPermission(user, item.permission);
   });
-  const homeHref = visibleItems[0]?.href || "/dashboard";
+  const homeHref = getDefaultRoute(user);
 
   const isActive = (href) =>
     href === "/dashboard"

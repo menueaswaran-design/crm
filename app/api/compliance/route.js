@@ -47,7 +47,7 @@ export async function GET(request) {
 
     const [records, total] = await Promise.all([
       Compliance.find(query)
-        .populate("clientId", "name category")
+        .populate("clientId", "name category phone")
         .populate("assignedStaff", "name email")
         .sort({ dueDate: 1 })
         .skip((page - 1) * limit)

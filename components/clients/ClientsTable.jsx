@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Trash2, ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
+import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import { generateClientMessage } from "@/lib/whatsappMessages";
 
 function fmtDate(d) {
   if (!d) return "—";
@@ -10,7 +13,14 @@ function fmtDate(d) {
 }
 
 export default function ClientsTable({ clients, onEdit, onDelete }) {
+  const [whatsappClient, setWhatsappClient] = useState(null);
+
+  const handleWhatsApp = (c) => {
+    setWhatsappClient(c);
+  };
+
   return (
+    <>
     <div className="card overflow-x-auto">
       <table className="w-full text-sm text-left">
         <thead>
@@ -64,6 +74,16 @@ export default function ClientsTable({ clients, onEdit, onDelete }) {
                   >
                     <ArrowUpRight size={15} />
                   </Link>
+                  {c.phone && (
+                    <button
+                      onClick={() => handleWhatsApp(c)}
+                      className="p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      aria-label="WhatsApp client"
+                      title="WhatsApp client"
+                    >
+                      <MessageSquare size={15} />
+                    </button>
+                  )}
                   <button
                     onClick={() => onEdit(c)}
                     className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -85,5 +105,15 @@ export default function ClientsTable({ clients, onEdit, onDelete }) {
         </tbody>
       </table>
     </div>
+
+    <WhatsAppMessageModal
+      open={!!whatsappClient}
+      onClose={() => setWhatsappClient(null)}
+      client={whatsappClient}
+      initialMessage={whatsappClient ? generateClientMessage({ client: whatsappClient }) : ""}
+      clientId={whatsappClient?._id}
+      messageType="CLIENT_MESSAGE"
+    />
+    </>
   );
 }

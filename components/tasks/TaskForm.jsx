@@ -7,6 +7,7 @@ import { z } from "zod";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
 import { Input, Select, Textarea } from "@/components/common/Field";
+import ClientSearchPicker from "@/components/clients/ClientSearchPicker";
 import { postData, patchData, apiFetch } from "@/lib/client";
 
 const schema = z.object({
@@ -19,7 +20,6 @@ const schema = z.object({
 });
 
 export default function TaskForm({ open, onClose, task, onSaved }) {
-  const [clients, setClients] = useState([]);
   const [staff, setStaff] = useState([]);
   const [serverError, setServerError] = useState("");
 
@@ -27,6 +27,8 @@ export default function TaskForm({ open, onClose, task, onSaved }) {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema) });
 
@@ -58,11 +60,7 @@ export default function TaskForm({ open, onClose, task, onSaved }) {
   useEffect(() => {
     (async () => {
       try {
-        const [c, u] = await Promise.all([
-          apiFetch("/api/clients?limit=100"),
-          apiFetch("/api/users"),
-        ]);
-        setClients(c.data || []);
+        const u = await apiFetch("/api/users");
         setStaff((u.data || []).filter((s) => s.role !== "admin"));
       } catch {
         // ignore
@@ -119,14 +117,13 @@ export default function TaskForm({ open, onClose, task, onSaved }) {
           <div className="sm:col-span-2">
             <Textarea label="Description" required placeholder="Describe the task" error={errors.description?.message} {...register("description")} />
           </div>
-          <Select label="Client" required error={errors.clientId?.message} {...register("clientId")}>
-            <option value="">Select client...</option>
-            {clients.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </Select>
+          <ClientSearchPicker
+            value={watch("clientId")}
+            onChange={(id) => setValue("clientId", id, { shouldValidate: true })}
+            selectedClient={task?.clientId}
+            error={errors.clientId?.message}
+            required
+          />
           <Select label="Assign To" error={errors.assignedTo?.message} {...register("assignedTo")}>
             <option value="">Unassigned</option>
             {staff.map((s) => (

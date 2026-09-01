@@ -1,11 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Trash2, ArrowUpRight } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
+import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import { generateClientMessage } from "@/lib/whatsappMessages";
 
 export default function ClientsList({ clients, onEdit, onDelete }) {
+  const [whatsappClient, setWhatsappClient] = useState(null);
+
+  const handleWhatsApp = (c) => {
+    setWhatsappClient(c);
+  };
+
   return (
+    <>
     <div className="card divide-y divide-slate-100">
       {clients.map((c) => (
         <div key={c._id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors">
@@ -34,6 +44,16 @@ export default function ClientsList({ clients, onEdit, onDelete }) {
             >
               <ArrowUpRight size={15} />
             </Link>
+            {c.phone && (
+              <button
+                onClick={() => handleWhatsApp(c)}
+                className="p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                aria-label="WhatsApp client"
+                title="WhatsApp client"
+              >
+                <MessageSquare size={15} />
+              </button>
+            )}
             <button
               onClick={() => onEdit(c)}
               className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
@@ -52,5 +72,15 @@ export default function ClientsList({ clients, onEdit, onDelete }) {
         </div>
       ))}
     </div>
+
+    <WhatsAppMessageModal
+      open={!!whatsappClient}
+      onClose={() => setWhatsappClient(null)}
+      client={whatsappClient}
+      initialMessage={whatsappClient ? generateClientMessage({ client: whatsappClient }) : ""}
+      clientId={whatsappClient?._id}
+      messageType="CLIENT_MESSAGE"
+    />
+    </>
   );
 }
