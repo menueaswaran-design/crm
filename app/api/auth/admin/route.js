@@ -38,11 +38,11 @@ export async function POST(request) {
         firebaseUid: `admin-bootstrap-${adminEmail}`,
         name: adminName,
         email: adminEmail,
-        role: "admin",
+        role: "superAdmin",
         isActive: true,
       });
     } else {
-      user.role = "admin";
+      user.role = "superAdmin";
       user.isActive = true;
       if (!user.firebaseUid) {
         user.firebaseUid = `admin-bootstrap-${adminEmail}`;
@@ -62,6 +62,7 @@ export async function POST(request) {
           name: user.name,
           email: user.email,
           role: user.role,
+          companyId: user.companyId || null,
         },
       },
     });

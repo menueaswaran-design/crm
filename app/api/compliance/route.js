@@ -3,6 +3,7 @@ import Compliance from "@/models/Compliance";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
 import { refreshOverdueCompliance, endOfDay } from "@/lib/status";
@@ -29,7 +30,8 @@ export async function GET(request) {
     await refreshComplianceReminders();
     await ensureRecurringRollforward();
 
-    const query = {};
+    const scope = companyScope(user) || {};
+    const query = { ...scope };
     if (status && status !== "All") query.status = status;
     if (type && type !== "All Types") query.category = type;
     if (upcoming) {
@@ -74,9 +76,10 @@ export async function POST(request) {
       return fail("Client, type and due date are required.");
     }
 
+    const scope = companyScope(user) || {};
     const assignedStaff = body.assignedStaff || null;
 
-    const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true } }).lean();
+    const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean();
     if (!client) return fail("Client not found.", 404);
 
     const dueDate = new Date(body.dueDate);
@@ -84,6 +87,7 @@ export async function POST(request) {
 
     const record = await Compliance.create({
       ...body,
+      companyId: user.companyId,
       assignedStaff,
       dueDate,
       status,
@@ -92,6 +96,7 @@ export async function POST(request) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "COMPLIANCE_CREATED",
       entityType: "Compliance",
       entityId: record._id,

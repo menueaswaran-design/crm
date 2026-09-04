@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
   {
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client" },

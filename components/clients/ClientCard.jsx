@@ -28,14 +28,14 @@ export default function ClientCard({ client, onEdit, onDelete }) {
   return (
     <>
     <div className="card p-4 flex flex-col">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-semibold shrink-0">
+      <div className="flex items-start justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs sm:text-sm font-semibold shrink-0">
             {initials(client.name)}
           </div>
           <div className="min-w-0">
             <Link href={`/clients/${client._id}`} className="block group">
-              <h3 className="font-semibold text-slate-900 truncate group-hover:text-indigo-700 transition-colors">
+              <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate group-hover:text-indigo-700 transition-colors">
                 {client.name}
               </h3>
             </Link>
@@ -52,7 +52,7 @@ export default function ClientCard({ client, onEdit, onDelete }) {
           {client.phone && (
             <button
               onClick={handleWhatsApp}
-              className="p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+              className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
               aria-label="WhatsApp client"
               title="WhatsApp client"
             >
@@ -61,14 +61,14 @@ export default function ClientCard({ client, onEdit, onDelete }) {
           )}
           <button
             onClick={() => onEdit(client)}
-            className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
             aria-label="Edit client"
           >
             <Pencil size={15} />
           </button>
           <button
             onClick={() => onDelete(client)}
-            className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
             aria-label="Delete client"
           >
             <Trash2 size={15} />
@@ -76,7 +76,7 @@ export default function ClientCard({ client, onEdit, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-3 grid gap-1.5 text-[13px] text-slate-600">
+      <div className="mt-3 grid gap-1.5 text-xs sm:text-[13px] text-slate-600">
         <p className="flex items-center gap-2 truncate">
           <IdCard size={14} className="text-slate-400 shrink-0" />
           <span className="font-mono text-slate-500">{client.pan || "—"}</span>

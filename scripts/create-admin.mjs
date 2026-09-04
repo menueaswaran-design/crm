@@ -86,10 +86,11 @@ async function main() {
       name: String,
       email: { type: String, unique: true },
       phone: String,
-      role: { type: String, enum: ["admin", "staff"], default: "staff" },
+      role: { type: String, enum: ["superAdmin", "admin", "staff"], default: "staff" },
       avatarUrl: String,
       isActive: { type: Boolean, default: true },
       permissions: [String],
+      companyId: String,
     },
     { timestamps: true }
   );
@@ -98,7 +99,7 @@ async function main() {
   let user = await User.findOne({ email });
   if (user) {
     user.firebaseUid = firebaseUid;
-    user.role = "admin";
+    user.role = "superAdmin";
     user.isActive = true;
     user.name = name;
     await user.save();
@@ -108,7 +109,7 @@ async function main() {
       firebaseUid,
       name,
       email,
-      role: "admin",
+      role: "superAdmin",
       isActive: true,
     });
     console.log("Created MongoDB admin user.");
@@ -118,7 +119,7 @@ async function main() {
   console.log(`  Email:    ${email}`);
   console.log(`  Password: ${password}`);
   console.log(`  UID:      ${firebaseUid}`);
-  console.log(`  Role:     admin`);
+  console.log(`  Role:     superAdmin`);
 
   await mongoose.disconnect();
 }

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const documentSchema = new mongoose.Schema(
   {
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
     name: { type: String, required: true, trim: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client", required: true },
     category: {

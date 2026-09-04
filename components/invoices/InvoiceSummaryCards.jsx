@@ -29,16 +29,17 @@ export default function InvoiceSummaryCards({ totals, loading }) {
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
       {cards.map((c) => (
-        <div key={c.label} className="card card-hover p-5 flex items-center gap-4">
-          <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${c.tile} flex items-center justify-center text-white shadow-md shrink-0`}>
-            <c.icon size={22} />
+        <div key={c.label} className="card card-hover p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+          <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-to-br ${c.tile} flex items-center justify-center text-white shadow-md shrink-0`}>
+            <c.icon size={20} className="sm:hidden" />
+            <c.icon size={22} className="hidden sm:block" />
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">{c.label}</p>
-            <p className="text-xl font-bold text-slate-900 truncate mt-0.5">{c.value}</p>
-            <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+            <p className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-slate-400">{c.label}</p>
+            <p className="text-lg sm:text-xl font-bold text-slate-900 truncate mt-0.5">{c.value}</p>
+            <p className="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
               <ArrowUpRight size={11} /> {c.sub}
             </p>
           </div>

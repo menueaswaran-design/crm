@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
     const user = await requirePermission(request, "documents");
     const { id } = await params;
 
-    const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true } })
+    const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId })
       .populate("clientId", "name")
       .populate("uploadedBy", "name")
       .lean();
@@ -38,7 +38,7 @@ export async function DELETE(request, { params }) {
     const user = await requirePermission(request, "documents");
     const { id } = await params;
 
-    const doc = await Document.findById(id);
+    const doc = await Document.findOne({ _id: id, companyId: user.companyId });
     if (!doc) return fail("Document not found.", 404);
 
     if (doc.storageType === "cloudinary") {
@@ -52,6 +52,7 @@ export async function DELETE(request, { params }) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "DOCUMENT_DELETED",
       entityType: "Document",
       entityId: id,

@@ -9,15 +9,15 @@ import { formatDate, formatINR, roundMoney } from "@/lib/utils";
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    await requirePermission(request, "invoices");
+    const user = await requirePermission(request, "invoices");
     const { id } = await params;
 
-    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true } })
+    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId })
       .populate("clientId", "name pan gstin")
       .lean();
     if (!invoice) return fail("Invoice not found.", 404);
 
-    const payments = await Payment.find({ invoiceId: id }).sort({ paymentDate: 1 }).lean();
+    const payments = await Payment.find({ invoiceId: id, companyId: user.companyId }).sort({ paymentDate: 1 }).lean();
 
     const items = (invoice.items || []).map((item, i) => {
       const qty = Number(item.quantity) || 0;

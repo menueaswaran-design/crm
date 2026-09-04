@@ -2,6 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Activity from "@/models/Activity";
 import { ok, handleError } from "@/lib/api";
 import { requireAuth } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 
 export async function GET(request) {
   try {
@@ -12,7 +13,7 @@ export async function GET(request) {
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "50", 10), 1), 100);
     const skip = Math.max(parseInt(searchParams.get("skip") || "0", 10), 0);
 
-    const activities = await Activity.find({})
+    const activities = await Activity.find({ ...(companyScope(user) || {}) })
       .populate("userId", "name")
       .sort({ createdAt: -1 })
       .skip(skip)

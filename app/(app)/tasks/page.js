@@ -145,18 +145,18 @@ function TasksPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
-            <Download size={15} /> CSV
+            <Download size={15} /> <span className="hidden sm:inline">CSV</span>
           </Button>
           <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
-            <Download size={15} /> Excel
+            <Download size={15} /> <span className="hidden sm:inline">Excel</span>
           </Button>
           <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <Plus size={15} /> Create Task
+            <Plus size={15} /> <span className="hidden sm:inline">Create Task</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}
@@ -179,7 +179,7 @@ function TasksPage() {
           <select
             value={assigned}
             onChange={(e) => { setAssigned(e.target.value); setPage(1); }}
-            className="input-base w-full sm:w-auto sm:min-w-40 cursor-pointer"
+            className="col-span-2 sm:col-span-1 input-base w-full sm:w-auto sm:min-w-40 cursor-pointer"
           >
             <option value="">All Assignments</option>
             <option value="assigned">Assigned</option>
@@ -204,7 +204,7 @@ function TasksPage() {
           action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Create Task</Button>}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
           {tasks.map((t) => (
             <TaskCard
               key={t._id}

@@ -101,11 +101,11 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
       title={invoice ? "Edit Invoice" : "Create Invoice"}
       maxWidth="max-w-2xl"
       footer={
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose} type="button">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+          <Button variant="secondary" onClick={onClose} type="button" className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={loading}>
+          <Button onClick={handleSubmit} loading={loading} className="w-full sm:w-auto">
             {loading ? "Creating..." : invoice ? "Save Changes" : "Create Invoice"}
           </Button>
         </div>
@@ -119,13 +119,15 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
 
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <ClientSearchPicker
-            value={clientId}
-            onChange={setClientId}
-            selectedClient={invoice?.clientId}
-            required
-          />
-          <div className="grid grid-cols-2 gap-3">
+          <div className="sm:col-span-2">
+            <ClientSearchPicker
+              value={clientId}
+              onChange={setClientId}
+              selectedClient={invoice?.clientId}
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input label="Invoice Date" type="date" required value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} />
             <Input label="Due Date" type="date" required value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
@@ -144,21 +146,19 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
           <div className="space-y-3">
             {items.map((item, idx) => (
               <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <Input
-                    placeholder="Description"
-                    value={item.description}
-                    onChange={(e) => updateItem(idx, "description", e.target.value)}
-                  />
-                  <Select value={item.serviceType} onChange={(e) => updateItem(idx, "serviceType", e.target.value)}>
-                    {INVOICE_SERVICE_TYPES.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <div className="flex gap-2 items-end">
+                <Input
+                  placeholder="Description"
+                  value={item.description}
+                  onChange={(e) => updateItem(idx, "description", e.target.value)}
+                />
+                <Select value={item.serviceType} onChange={(e) => updateItem(idx, "serviceType", e.target.value)}>
+                  {INVOICE_SERVICE_TYPES.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </Select>
+                <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="number"
                     min="1"
@@ -173,22 +173,26 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
                     value={item.amount}
                     onChange={(e) => updateItem(idx, "amount", e.target.value)}
                   />
-                  <button
-                    onClick={() => removeItem(idx)}
-                    className="mb-1 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
+                <button
+                  onClick={() => removeItem(idx)}
+                  className="w-full sm:w-auto sm:ml-auto flex items-center justify-center gap-1 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors text-xs"
+                  aria-label="Remove item"
+                >
+                  <Trash2 size={14} /> Remove
+                </button>
               </div>
             ))}
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="GST Rate (%)" type="number" min="0" max="100" value={gstRate} onChange={(e) => setGstRate(e.target.value)} />
-          <Textarea label="Notes" placeholder="Optional notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          <div className="sm:col-span-2">
+            <Input label="GST Rate (%)" type="number" min="0" max="100" value={gstRate} onChange={(e) => setGstRate(e.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <Textarea label="Notes" placeholder="Optional notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+          </div>
         </div>
 
         <div className="rounded-lg bg-slate-50 p-4 text-sm space-y-1">

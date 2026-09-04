@@ -4,6 +4,7 @@ import Client from "@/models/Client";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { nextClientCode } from "@/lib/counter";
 
@@ -65,7 +66,8 @@ export async function POST(request) {
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
     if (!rows.length) return fail("No rows found in the Excel sheet.", 422);
 
-    const staffUsers = await User.find({ isActive: true, role: "staff" })
+    const scope = companyScope(user) || {};
+    const staffUsers = await User.find({ isActive: true, role: "staff", ...scope })
       .select("_id name email")
       .lean();
 
@@ -132,6 +134,7 @@ export async function POST(request) {
           address,
           assignedStaff: assignedStaff || null,
           status,
+          companyId: user.companyId,
           createdBy: user._id,
         },
       });
@@ -146,6 +149,7 @@ export async function POST(request) {
 
     const existing = await Client.find({
       isDeleted: { $ne: true },
+      ...scope,
       $or: [{ pan: { $in: pans } }, { gstin: { $in: gstins } }],
     })
       .select("pan gstin")
@@ -172,7 +176,7 @@ export async function POST(request) {
       }
 
       const clientCode = await nextClientCode(row.data.name);
-      const existingCode = await Client.findOne({ clientCode, isDeleted: { $ne: true } })
+      const existingCode = await Client.findOne({ clientCode, isDeleted: { $ne: true }, ...scope })
         .select("clientCode")
         .lean();
       if (existingCode) {
@@ -196,6 +200,7 @@ export async function POST(request) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "CLIENT_IMPORT",
       entityType: "Client",
       description: `${user.name} imported ${created.length} clients from Excel`,

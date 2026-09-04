@@ -3,6 +3,7 @@ import Task from "@/models/Task";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
 import { deriveTaskStatus, buildTaskStatusFilter } from "@/lib/status";
@@ -47,7 +48,8 @@ export async function GET(request) {
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10), 1), 100);
 
-    const query = { isDeleted: { $ne: true } };
+    const scope = companyScope(user) || {};
+    const query = { isDeleted: { $ne: true }, ...scope };
     if (priority) query.priority = priority;
 
     if (user.role === "staff") {
@@ -99,16 +101,18 @@ export async function POST(request) {
       return fail("Title, description, priority and due date are required.");
     }
 
+    const scope = companyScope(user) || {};
     const assignedTo = body.assignedTo || null;
 
     const client = body.clientId
-      ? await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true } }).lean()
+      ? await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean()
       : null;
     if (body.clientId && !client) return fail("Client not found.", 404);
 
     const task = await Task.create({
       title: body.title,
       description: body.description,
+      companyId: user.companyId,
       clientId: body.clientId || null,
       assignedTo,
       priority: body.priority,
@@ -119,6 +123,7 @@ export async function POST(request) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "TASK_CREATED",
       entityType: "Task",
       entityId: task._id,

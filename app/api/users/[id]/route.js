@@ -7,11 +7,11 @@ import { sanitizePermissions } from "@/lib/permissions";
 export async function PATCH(request, { params }) {
   try {
     await dbConnect();
-    await requireAdmin(request);
+    const user = await requireAdmin(request);
     const { id } = await params;
     const body = await request.json();
 
-    const allowed = ["name", "email", "phone", "role", "isActive", "avatarUrl", "dashboardFinancials"];
+    const allowed = ["name", "email", "phone", "isActive", "avatarUrl", "dashboardFinancials", "permissions"];
     const update = {};
     for (const key of allowed) {
       if (body[key] !== undefined) update[key] = body[key];
@@ -19,10 +19,14 @@ export async function PATCH(request, { params }) {
     const permissions = sanitizePermissions(body.permissions);
     if (permissions !== null) update.permissions = permissions;
 
-    const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true });
-    if (!user) return fail("User not found.", 404);
+    const updated = await User.findOneAndUpdate(
+      { _id: id, companyId: user.companyId },
+      update,
+      { new: true, runValidators: true }
+    );
+    if (!updated) return fail("User not found.", 404);
 
-    return ok(user, "User updated successfully.");
+    return ok(updated, "User updated successfully.");
   } catch (error) {
     return handleError(error);
   }
@@ -38,7 +42,11 @@ export async function DELETE(request, { params }) {
       return fail("You cannot delete your own account.", 400);
     }
 
-    const updated = await User.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    const updated = await User.findOneAndUpdate(
+      { _id: id, companyId: user.companyId },
+      { isActive: false },
+      { new: true }
+    );
     if (!updated) return fail("User not found.", 404);
 
     return ok(updated, "User deactivated successfully.");

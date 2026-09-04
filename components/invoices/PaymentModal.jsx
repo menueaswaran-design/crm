@@ -50,11 +50,11 @@ export default function PaymentModal({ invoice, onClose, onSaved }) {
       title="Record Payment"
       maxWidth="max-w-md"
       footer={
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose} type="button">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+          <Button variant="secondary" onClick={onClose} type="button" className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} loading={loading}>
+          <Button onClick={handleSubmit} loading={loading} className="w-full sm:w-auto">
             <Banknote size={14} /> {loading ? "Recording..." : "Record Payment"}
           </Button>
         </div>

@@ -94,11 +94,11 @@ export default function TaskForm({ open, onClose, task, onSaved }) {
       title={task ? "Edit Task" : "Create Task"}
       maxWidth="max-w-2xl"
       footer={
-        <div className="flex justify-end gap-3">
-          <Button variant="secondary" onClick={onClose} type="button">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+          <Button variant="secondary" onClick={onClose} type="button" className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button type="submit" form="task-form" loading={isSubmitting}>
+          <Button type="submit" form="task-form" loading={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? "Creating..." : task ? "Save Changes" : "Create Task"}
           </Button>
         </div>

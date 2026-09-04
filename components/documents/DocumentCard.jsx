@@ -31,10 +31,11 @@ export default function DocumentCard({ doc, onDelete }) {
   };
 
   return (
-    <div className="card card-hover p-5 flex flex-col animate-fade-in-up">
+    <div className="card card-hover p-4 sm:p-5 flex flex-col animate-fade-in-up">
       <div className="flex items-start gap-3">
-        <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}>
-          <Icon size={22} />
+        <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}>
+          <Icon size={20} className="sm:hidden" />
+          <Icon size={22} className="hidden sm:block" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-slate-900 text-sm break-all leading-snug">{doc.name}</p>
@@ -50,14 +51,14 @@ export default function DocumentCard({ doc, onDelete }) {
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
+          className="p-2 sm:p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
           aria-label="Delete document"
         >
           <Trash2 size={15} />
         </button>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-y-2 text-xs text-slate-500">
+      <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-y-2 text-xs text-slate-500">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-slate-400">Client</p>
           <p className="font-medium text-slate-700 truncate mt-0.5">{doc.clientId?.name || "—"}</p>
@@ -72,7 +73,7 @@ export default function DocumentCard({ doc, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
+      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex items-center gap-2">
         <button
           onClick={() => window.open(`/api/documents/${doc._id}/view`, "_blank")}
           className="shrink-0 p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-colors"
@@ -84,10 +85,10 @@ export default function DocumentCard({ doc, onDelete }) {
         <Button
           size="sm"
           variant="secondary"
-          className="flex-1"
+          className="flex-1 min-w-0"
           onClick={() => window.open(`/api/documents/${doc._id}/download`, "_blank")}
         >
-          <Download size={14} /> Download
+          <Download size={14} /> <span className="truncate">Download</span>
         </Button>
       </div>
     </div>

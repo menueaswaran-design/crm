@@ -14,7 +14,7 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json();
 
-    const record = await Compliance.findById(id);
+    const record = await Compliance.findOne({ _id: id, companyId: user.companyId });
     if (!record) return fail("Compliance record not found.", 404);
 
     const client = await Client.findById(record.clientId).lean();
@@ -49,6 +49,7 @@ export async function PATCH(request, { params }) {
     if (body.status === "COMPLETED") {
       await logActivity({
         userId: user._id,
+        companyId: user.companyId,
         action: "COMPLIANCE_COMPLETED",
         entityType: "Compliance",
         entityId: record._id,
@@ -79,11 +80,12 @@ export async function DELETE(request, { params }) {
     const user = await requirePermission(request, "compliance");
     const { id } = await params;
 
-    const record = await Compliance.findByIdAndDelete(id);
+    const record = await Compliance.findOneAndDelete({ _id: id, companyId: user.companyId });
     if (!record) return fail("Compliance record not found.", 404);
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "COMPLIANCE_DELETED",
       entityType: "Compliance",
       entityId: id,

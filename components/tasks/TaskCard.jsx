@@ -30,15 +30,15 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   return (
     <div className="card p-4 flex flex-col">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-slate-900 leading-snug">{task.title}</h3>
+        <h3 className="font-semibold text-slate-900 leading-snug text-sm sm:text-base">{task.title}</h3>
         <div className="flex gap-0.5 shrink-0">
           {onEdit && (
-            <button onClick={() => onEdit(task)} className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" aria-label="Edit">
+            <button onClick={() => onEdit(task)} className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" aria-label="Edit">
               <Pencil size={15} />
             </button>
           )}
           {onDelete && (
-            <button onClick={() => onDelete(task)} className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" aria-label="Delete">
+            <button onClick={() => onDelete(task)} className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" aria-label="Delete">
               <Trash2 size={15} />
             </button>
           )}
@@ -51,9 +51,9 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
         {unassigned && <CategoryBadge category="Unassigned" />}
       </div>
 
-      <p className="mt-2.5 text-sm text-slate-600 line-clamp-2">{task.description}</p>
+      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 line-clamp-2">{task.description}</p>
 
-      <div className="mt-3 space-y-1.5 text-[13px] text-slate-600">
+      <div className="mt-3 space-y-1.5 text-xs sm:text-[13px] text-slate-600">
         <p className="flex items-center gap-2 truncate">
           <Building2 size={14} className="text-slate-400 shrink-0" />
           <span className="truncate">{task.clientId?.name || "—"}</span>

@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
     const user = await requirePermission(request, "documents");
     const { id } = await params;
 
-    const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true } }).lean();
+    const doc = await Document.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId }).lean();
     if (!doc) return fail("Document not found.", 404);
 
     if (user.role === "staff") {

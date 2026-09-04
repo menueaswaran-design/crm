@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
     const user = await requirePermission(request, "invoices");
     const { id } = await params;
 
-    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true } })
+    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId })
       .populate("clientId", "name category pan gstin email phone address")
       .lean();
     if (!invoice) return fail("Invoice not found.", 404);

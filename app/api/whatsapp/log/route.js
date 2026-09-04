@@ -33,6 +33,7 @@ export async function POST(request) {
     // We do NOT store the actual message content for privacy reasons.
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "WHATSAPP_MESSAGE_OPENED",
       entityType: "Client",
       entityId: clientId,

@@ -42,7 +42,7 @@ export async function POST(request) {
       if (firebaseName && !user.name) user.name = firebaseName;
       if (!user.isActive) return fail("This account is inactive.", 403);
       if (adminEmail && email === adminEmail) {
-        user.role = "admin";
+        user.role = "superAdmin";
         if (!user.name) user.name = adminName;
       }
       await user.save();
@@ -51,7 +51,7 @@ export async function POST(request) {
         firebaseUid,
         name: firebaseName || adminName,
         email,
-        role: "admin",
+        role: "superAdmin",
         isActive: true,
       });
     } else {
@@ -70,6 +70,7 @@ export async function POST(request) {
         phone: user.phone,
         isActive: user.isActive,
         avatarUrl: user.avatarUrl,
+        companyId: user.companyId || null,
       },
       "Account synced."
     );

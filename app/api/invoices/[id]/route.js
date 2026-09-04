@@ -12,12 +12,12 @@ export async function GET(request, { params }) {
     const user = await requirePermission(request, "invoices");
     const { id } = await params;
 
-    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true } })
+    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId })
       .populate("clientId", "name category pan gstin email phone address")
       .lean();
     if (!invoice) return fail("Invoice not found.", 404);
 
-    const payments = await Payment.find({ invoiceId: id }).sort({ paymentDate: -1 }).lean();
+    const payments = await Payment.find({ invoiceId: id, companyId: user.companyId }).sort({ paymentDate: -1 }).lean();
 
     return ok({ ...invoice, payments });
   } catch (error) {
@@ -32,7 +32,7 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json();
 
-    const invoice = await Invoice.findById(id);
+    const invoice = await Invoice.findOne({ _id: id, companyId: user.companyId });
     if (!invoice) return fail("Invoice not found.", 404);
 
     if (body.items) {
@@ -69,11 +69,16 @@ export async function DELETE(request, { params }) {
     const user = await requirePermission(request, "invoices");
     const { id } = await params;
 
-    const invoice = await Invoice.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    const invoice = await Invoice.findOneAndUpdate(
+      { _id: id, companyId: user.companyId },
+      { isDeleted: true },
+      { new: true }
+    );
     if (!invoice) return fail("Invoice not found.", 404);
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "INVOICE_DELETED",
       entityType: "Invoice",
       entityId: id,

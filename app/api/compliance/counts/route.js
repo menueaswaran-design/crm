@@ -2,6 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import Compliance from "@/models/Compliance";
 import { ok, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { refreshOverdueCompliance } from "@/lib/status";
 
 const UNASSIGNED_QUERY = {
@@ -26,7 +27,8 @@ export async function GET(request) {
 
     await refreshOverdueCompliance();
 
-    const baseQuery = {};
+    const scope = companyScope(user) || {};
+    const baseQuery = { ...scope };
     if (user.role === "staff") {
       baseQuery.assignedStaff = user._id;
     } else if (assigned === "unassigned") {

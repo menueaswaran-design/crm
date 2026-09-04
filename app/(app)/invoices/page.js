@@ -150,13 +150,13 @@ export default function InvoicesPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
-            <Download size={15} /> CSV
+            <Download size={15} /> <span className="hidden sm:inline">CSV</span>
           </Button>
           <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
-            <Download size={15} /> Excel
+            <Download size={15} /> <span className="hidden sm:inline">Excel</span>
           </Button>
           <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <Plus size={15} /> Create Invoice
+            <Plus size={15} /> <span className="hidden sm:inline">Create Invoice</span>
           </Button>
         </div>
       </div>
@@ -165,16 +165,16 @@ export default function InvoicesPage() {
 
       <InvoiceSummaryCards totals={totals} loading={loading && !totals} />
 
-      <div className="card p-4 flex flex-wrap items-center gap-3">
-        <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-700 px-3.5 py-2 text-sm font-semibold">
-          <ReceiptText size={16} /> {status === "All" ? "All invoices" : status.charAt(0) + status.slice(1).toLowerCase()}
+      <div className="card p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 text-emerald-700 px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold">
+          <ReceiptText size={14} className="sm:hidden" /> <ReceiptText size={16} className="hidden sm:block" /> {status === "All" ? "All invoices" : status.charAt(0) + status.slice(1).toLowerCase()}
         </div>
         <div className="flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
           {STATUSES.map((s) => (
             <button
               key={s}
               onClick={() => { setStatus(s); setPage(1); }}
-              className={`px-3.5 py-2 rounded-lg text-[13px] font-medium transition-all ${
+              className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-[13px] font-medium transition-all ${
                 status === s ? "bg-white shadow-sm text-brand-700" : "text-slate-500 hover:text-slate-800"
               }`}
             >

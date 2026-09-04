@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const complianceSchema = new mongoose.Schema(
   {
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client", required: true },
     type: { type: String, required: true },
     category: {

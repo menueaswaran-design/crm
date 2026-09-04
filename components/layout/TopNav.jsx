@@ -11,13 +11,14 @@ import {
   FolderOpen,
   Receipt,
   UserCog,
+  Building2,
   Scale,
   Menu,
   X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { initials } from "@/lib/utils";
-import { hasPermission, getDefaultRoute } from "@/lib/permissions";
+import { hasPermission, getDefaultRoute, SUPER_ADMIN_ROUTE } from "@/lib/permissions";
 import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/documents", label: "Documents", icon: FolderOpen, permission: "documents" },
   { href: "/invoices", label: "Invoices", icon: Receipt, permission: "invoices" },
   { href: "/staff", label: "Staff", icon: UserCog, permission: "__admin_only" },
+  { href: SUPER_ADMIN_ROUTE, label: "Companies", icon: Building2, permission: "__super_admin_only" },
 ];
 
 export default function TopNav() {
@@ -38,6 +40,7 @@ export default function TopNav() {
 
   const visibleItems = NAV_ITEMS.filter((item) => {
     if (item.permission === "__admin_only") return user?.role === "admin";
+    if (item.permission === "__super_admin_only") return user?.role === "superAdmin";
     return hasPermission(user, item.permission);
   });
   const homeHref = getDefaultRoute(user);

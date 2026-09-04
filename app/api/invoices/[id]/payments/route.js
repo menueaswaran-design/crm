@@ -9,9 +9,9 @@ import { logActivity } from "@/lib/activity";
 export async function GET(request, { params }) {
   try {
     await dbConnect();
-    await requirePermission(request, "invoices");
+    const user = await requirePermission(request, "invoices");
     const { id } = await params;
-    const payments = await Payment.find({ invoiceId: id }).sort({ paymentDate: -1 }).lean();
+    const payments = await Payment.find({ invoiceId: id, companyId: user.companyId }).sort({ paymentDate: -1 }).lean();
     return ok(payments);
   } catch (error) {
     return handleError(error);
@@ -29,12 +29,13 @@ export async function POST(request, { params }) {
     if (!amount || amount <= 0) return fail("Payment amount must be positive.");
     if (!body.paymentDate) return fail("Payment date is required.");
 
-    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true } });
+    const invoice = await Invoice.findOne({ _id: id, isDeleted: { $ne: true }, companyId: user.companyId });
     if (!invoice) return fail("Invoice not found.", 404);
 
     const payment = await Payment.create({
       invoiceId: invoice._id,
       clientId: invoice.clientId,
+      companyId: user.companyId,
       amount,
       paymentDate: new Date(body.paymentDate),
       paymentMethod: body.paymentMethod || "BANK",
@@ -58,6 +59,7 @@ export async function POST(request, { params }) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "PAYMENT_RECORDED",
       entityType: "Payment",
       entityId: payment._id,

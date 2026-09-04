@@ -3,6 +3,7 @@ import Invoice from "@/models/Invoice";
 import Client from "@/models/Client";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { nextInvoiceNumber } from "@/lib/counter";
 import { calculateInvoice, deriveInvoiceStatus } from "@/lib/invoice";
 import { logActivity } from "@/lib/activity";
@@ -17,11 +18,12 @@ export async function GET(request) {
     const page = Math.max(parseInt(searchParams.get("page") || "1", 10), 1);
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "20", 10), 1), 100);
 
-    const query = { isDeleted: { $ne: true } };
+    const scope = companyScope(user) || {};
+    const query = { isDeleted: { $ne: true }, ...scope };
     if (status && status !== "All") query.status = status;
 
     if (user.role === "staff") {
-      const clients = await Client.find({ assignedStaff: user._id }).select("_id").lean();
+      const clients = await Client.find({ assignedStaff: user._id, ...scope }).select("_id").lean();
       query.clientId = { $in: clients.map((c) => c._id) };
     }
 
@@ -53,7 +55,8 @@ export async function POST(request) {
       return fail("Client, dates and at least one invoice item are required.");
     }
 
-    const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true } }).lean();
+    const scope = companyScope(user) || {};
+    const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean();
     if (!client) return fail("Client not found.", 404);
 
     const invoiceNumber = await nextInvoiceNumber();
@@ -62,6 +65,7 @@ export async function POST(request) {
     const invoice = await Invoice.create({
       invoiceNumber,
       clientId: body.clientId,
+      companyId: user.companyId,
       invoiceDate: new Date(body.invoiceDate),
       dueDate: new Date(body.dueDate),
       items: body.items,
@@ -75,6 +79,7 @@ export async function POST(request) {
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "INVOICE_CREATED",
       entityType: "Invoice",
       entityId: invoice._id,

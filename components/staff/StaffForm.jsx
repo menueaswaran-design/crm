@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck, ShieldAlert } from "lucide-react";
 import Modal from "@/components/common/Modal";
 import Button from "@/components/common/Button";
-import { Input, Select } from "@/components/common/Field";
+import { Input } from "@/components/common/Field";
 import { postData, patchData } from "@/lib/client";
 import { NAV_PERMISSIONS, DEFAULT_STAFF_PERMISSIONS } from "@/lib/permissions";
 
@@ -13,7 +13,6 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("staff");
   const [isActive, setIsActive] = useState(true);
   const [permissions, setPermissions] = useState(DEFAULT_STAFF_PERMISSIONS);
   const [dashboardFinancials, setDashboardFinancials] = useState(false);
@@ -28,8 +27,6 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
         setName(staff.name || "");
         setEmail(staff.email || "");
         setPhone(staff.phone || "");
-        setRole(staff.role || "staff");
-        setIsActive(staff.isActive !== false);
         setDashboardFinancials(staff.dashboardFinancials === true);
         setPermissions(
           Array.isArray(staff.permissions) && staff.permissions.length > 0
@@ -40,7 +37,6 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
         setName("");
         setEmail("");
         setPhone("");
-        setRole("staff");
         setIsActive(true);
         setDashboardFinancials(false);
         setPermissions([...DEFAULT_STAFF_PERMISSIONS]);
@@ -62,7 +58,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
     if (!staff && (!password || password.length < 6)) {
       return setError("Password is required (min 6 characters).");
     }
-    if (role === "staff" && permissions.length === 0) {
+    if (permissions.length === 0) {
       return setError("Select at least one section the staff member can access.");
     }
 
@@ -70,13 +66,11 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
       name: name.trim(),
       email: email.trim(),
       phone: phone.trim(),
-      role,
+      role: "staff",
       isActive,
+      permissions,
+      dashboardFinancials,
     };
-    if (role === "staff") {
-      payload.permissions = permissions;
-      payload.dashboardFinancials = dashboardFinancials;
-    }
     if (!staff) payload.password = password;
 
     setLoading(true);
@@ -151,10 +145,6 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
-        <Select label="Role" value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="staff">Staff</option>
-          <option value="admin">Admin</option>
-        </Select>
         <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
           <div>
             <p className="text-sm font-medium text-slate-900">Active account</p>
@@ -175,8 +165,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
           </button>
         </div>
 
-        {role === "staff" && (
-          <div className="rounded-lg border border-slate-200 overflow-hidden">
+        {permissions.length === 0 ? null : <div className="rounded-lg border border-slate-200 overflow-hidden">
             <div className="flex items-start gap-2.5 bg-slate-50 border-b border-slate-200 px-4 py-3">
               {permissions.includes("dashboard") ? (
                 <ShieldAlert size={16} className="text-amber-500 mt-0.5 shrink-0" />
@@ -238,12 +227,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
               </button>
             </div>
           </div>
-        )}
-        {role === "admin" && (
-          <p className="text-xs text-slate-500 flex items-center gap-1.5">
-            <ShieldCheck size={13} className="text-emerald-600" /> Admins always have full access to every section.
-          </p>
-        )}
+        }
       </form>
     </Modal>
   );

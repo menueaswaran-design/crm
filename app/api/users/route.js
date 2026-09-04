@@ -2,6 +2,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requireAuth, requireAdmin } from "@/lib/auth";
+import { companyScope } from "@/lib/auth";
 import { sanitizePermissions, DEFAULT_STAFF_PERMISSIONS } from "@/lib/permissions";
 import {
   createOrGetFirebaseUser,
@@ -12,13 +13,17 @@ export async function GET(request) {
   try {
     await dbConnect();
     const user = await requireAuth(request);
+    const scope = companyScope(user) || {};
     if (user.role === "staff") {
-      const staff = await User.find({ isActive: true, role: "staff" })
+      const staff = await User.find({ isActive: true, role: "staff", ...scope })
         .select("name email role avatarUrl")
         .lean();
       return ok(staff);
     }
-    const users = await User.find({}).select("name email phone role isActive avatarUrl firebaseUid permissions dashboardFinancials").lean();
+    if (user.role === "superAdmin") {
+      return ok([]);
+    }
+    const users = await User.find({ companyId: user.companyId }).select("name email phone role isActive avatarUrl firebaseUid permissions dashboardFinancials companyId").lean();
     return ok(users);
   } catch (error) {
     return handleError(error);
@@ -28,7 +33,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     await dbConnect();
-    await requireAdmin(request);
+    const adminUser = await requireAdmin(request);
     const body = await request.json();
 
     if (!body.name || !body.email) {
@@ -37,7 +42,7 @@ export async function POST(request) {
 
     const email = String(body.email).toLowerCase().trim();
     const password = String(body.password || "");
-    const role = body.role === "admin" ? "admin" : "staff";
+    const role = "staff";
 
     if (!password || password.length < 6) {
       return fail("Password is required (min 6 characters) so the user can sign in.", 400);
@@ -54,28 +59,30 @@ export async function POST(request) {
       return fail(friendlyFirebaseAuthError(err.code || err.message), 400);
     }
 
-    const user = await User.create({
+    const newUser = await User.create({
       firebaseUid,
       name: body.name.trim(),
       email,
       phone: body.phone || "",
       role,
       isActive: body.isActive !== false,
+      companyId: adminUser.companyId,
       permissions: sanitizePermissions(body.permissions) || DEFAULT_STAFF_PERMISSIONS,
       dashboardFinancials: body.dashboardFinancials === true,
     });
 
     return ok(
       {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        isActive: user.isActive,
-        permissions: user.permissions,
-        dashboardFinancials: user.dashboardFinancials,
-        firebaseUid: user.firebaseUid,
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        isActive: newUser.isActive,
+        permissions: newUser.permissions,
+        dashboardFinancials: newUser.dashboardFinancials,
+        firebaseUid: newUser.firebaseUid,
+        companyId: newUser.companyId,
       },
       "User created successfully. They can sign in with this email and password."
     );

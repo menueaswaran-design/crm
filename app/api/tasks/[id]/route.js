@@ -11,7 +11,7 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json();
 
-    const task = await Task.findById(id);
+    const task = await Task.findOne({ _id: id, companyId: user.companyId });
     if (!task) return fail("Task not found.", 404);
 
     if (body.status !== undefined) {
@@ -34,6 +34,7 @@ export async function PATCH(request, { params }) {
     if (body.status === "COMPLETED") {
       await logActivity({
         userId: user._id,
+        companyId: user.companyId,
         action: "TASK_COMPLETED",
         entityType: "Task",
         entityId: task._id,
@@ -53,11 +54,16 @@ export async function DELETE(request, { params }) {
     const user = await requirePermission(request, "tasks");
     const { id } = await params;
 
-    const task = await Task.findByIdAndUpdate(id, { isDeleted: true }, { new: true });
+    const task = await Task.findOneAndUpdate(
+      { _id: id, companyId: user.companyId },
+      { isDeleted: true },
+      { new: true }
+    );
     if (!task) return fail("Task not found.", 404);
 
     await logActivity({
       userId: user._id,
+      companyId: user.companyId,
       action: "TASK_DELETED",
       entityType: "Task",
       entityId: id,
