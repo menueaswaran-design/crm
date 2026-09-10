@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -14,6 +14,10 @@ import {
   ArrowRight,
   ArrowUpRight,
   Activity,
+  Receipt,
+  Plus,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -26,11 +30,24 @@ import {
 } from "recharts";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/client";
-import { getErrorMessage, formatINR, formatDate } from "@/lib/utils";
+import { getErrorMessage, formatINR, formatDate, EXPENSE_CATEGORIES } from "@/lib/utils";
 import { canViewFinancials } from "@/lib/permissions";
 import ErrorBanner from "@/components/common/ErrorBanner";
 import EmptyState from "@/components/common/EmptyState";
 import UpcomingDeadlinesCard from "@/components/dashboard/UpcomingDeadlinesCard";
+import Modal from "@/components/common/Modal";
+import Field, { Input, Select, Textarea } from "@/components/common/Field";
+
+const EXPENSE_TABS = [
+  { key: "daily", label: "Daily" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "all", label: "All" },
+];
+
+const TAB_LABELS = { daily: "Today", weekly: "This week", monthly: "This month", all: "All time" };
+
+const emptyForm = { description: "", amount: "", category: "Other", date: new Date().toISOString().split("T")[0], notes: "" };
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -40,6 +57,17 @@ export default function DashboardPage() {
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [editExpense, setEditExpense] = useState(null);
+  const [expenseTab, setExpenseTab] = useState("all");
+  const [expenseList, setExpenseList] = useState([]);
+  const [expenseTotal, setExpenseTotal] = useState(0);
+  const [expenseLoading, setExpenseLoading] = useState(false);
+
+  const [expForm, setExpForm] = useState({ ...emptyForm });
+  const [expSaving, setExpSaving] = useState(false);
+  const [expError, setExpError] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -62,9 +90,88 @@ export default function DashboardPage() {
     }
   };
 
+  const loadExpenses = useCallback(async (period) => {
+    setExpenseLoading(true);
+    try {
+      const res = await apiFetch(`/api/expenses?period=${period}`);
+      setExpenseList(res.data?.expenses || []);
+      setExpenseTotal(res.data?.total || 0);
+    } catch {
+      setExpenseList([]);
+      setExpenseTotal(0);
+    } finally {
+      setExpenseLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) load();
   }, [user]);
+
+  useEffect(() => {
+    if (user) loadExpenses(expenseTab);
+  }, [user, expenseTab, loadExpenses]);
+
+  const handleExpenseSubmit = async (e) => {
+    e.preventDefault();
+    setExpError("");
+    setExpSaving(true);
+    try {
+      if (editExpense) {
+        await apiFetch(`/api/expenses/${editExpense._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(expForm),
+        });
+      } else {
+        await apiFetch("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(expForm),
+        });
+      }
+      setExpForm({ ...emptyForm });
+      setEditExpense(null);
+      setShowAddExpense(false);
+      loadExpenses(expenseTab);
+      load();
+    } catch (err) {
+      setExpError(getErrorMessage(err));
+    } finally {
+      setExpSaving(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id) => {
+    if (!confirm("Delete this expense?")) return;
+    try {
+      await apiFetch(`/api/expenses/${id}`, { method: "DELETE" });
+      loadExpenses(expenseTab);
+      load();
+    } catch {
+      // silent
+    }
+  };
+
+  const openEditExpense = (ex) => {
+    setEditExpense(ex);
+    setExpForm({
+      description: ex.description || "",
+      amount: ex.amount || "",
+      category: ex.category || "Other",
+      date: ex.date ? new Date(ex.date).toISOString().split("T")[0] : "",
+      notes: ex.notes || "",
+    });
+    setExpError("");
+    setShowAddExpense(true);
+  };
+
+  const openAddExpense = () => {
+    setEditExpense(null);
+    setExpForm({ ...emptyForm });
+    setExpError("");
+    setShowAddExpense(true);
+  };
 
   if (loading) {
     return (
@@ -92,6 +199,8 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const isAdmin = user?.role === "admin";
 
   const stats = [
     {
@@ -156,6 +265,16 @@ export default function DashboardPage() {
       financial: true,
     },
     {
+      label: "Total Expenses",
+      value: formatINR(summary?.totalExpenses ?? 0),
+      icon: Receipt,
+      tile: "from-rose-500 to-red-600",
+      sub: "all time",
+      financial: true,
+      adminAction: isAdmin,
+      onEdit: () => openAddExpense(),
+    },
+    {
       label: "Documents",
       value: summary?.documents ?? 0,
       icon: FolderOpen,
@@ -197,17 +316,26 @@ export default function DashboardPage() {
             Practice overview for today
           </p>
         </div>
-        <Link
-          href="/clients"
-          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 text-white text-sm font-medium px-3.5 py-2 hover:bg-indigo-700 transition-colors"
-        >
-          <Users size={15} /> Add client
-        </Link>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <button
+              onClick={openAddExpense}
+              className="inline-flex items-center gap-2 rounded-md bg-rose-600 text-white text-sm font-medium px-3.5 py-2 hover:bg-rose-700 transition-colors"
+            >
+              <Plus size={15} /> Add expense
+            </button>
+          )}
+          <Link
+            href="/clients"
+            className="inline-flex items-center gap-2 rounded-md bg-indigo-600 text-white text-sm font-medium px-3.5 py-2 hover:bg-indigo-700 transition-colors"
+          >
+            <Users size={15} /> Add client
+          </Link>
+        </div>
       </div>
 
       {error && <ErrorBanner message={error} onRetry={load} />}
 
-      {/* Stat cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         {visibleStats.map((s) => {
           const contents = (
@@ -216,11 +344,25 @@ export default function DashboardPage() {
                 <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${s.tile} flex items-center justify-center text-white shadow-md`}>
                   <s.icon size={20} />
                 </div>
-                {s.alert && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-600 bg-rose-50 rounded-full px-2 py-0.5">
-                    <AlertTriangle size={10} /> Action needed
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-1.5">
+                  {s.alert && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-600 bg-rose-50 rounded-full px-2 py-0.5">
+                      <AlertTriangle size={10} /> Action needed
+                    </span>
+                  )}
+                  {s.adminAction && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        s.onEdit();
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full bg-rose-600 text-white text-[11px] font-semibold px-2.5 py-1 hover:bg-rose-700 shadow-sm transition-colors"
+                      title="Add a new expense"
+                    >
+                      <Plus size={12} /> Add expense
+                    </button>
+                  )}
+                </div>
               </div>
               <p className="mt-4 text-[11px] font-medium uppercase tracking-wider text-slate-400">
                 {s.label}
@@ -251,7 +393,6 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-3">
         {viewFinancials ? (
           <>
@@ -306,13 +447,98 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-
-        {/* Upcoming deadlines */}
         <UpcomingDeadlinesCard items={upcoming} />
       </div>
 
+      {viewFinancials && (
+        <div className="card p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+            <div>
+              <h2 className="font-semibold text-slate-900">Expenses Overview</h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {TAB_LABELS[expenseTab]} total:{" "}
+                <span className="font-semibold text-rose-600">{formatINR(expenseTotal)}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+              {EXPENSE_TABS.map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setExpenseTab(t.key)}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors ${
+                    expenseTab === t.key
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {expenseLoading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="skeleton h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : expenseList.length === 0 ? (
+            <EmptyState
+              compact
+              title="No expenses recorded"
+              description={isAdmin ? "Click 'Add expense' to record your first expense." : "Expenses will appear here once added by an admin."}
+              className="py-8"
+            />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Description</th>
+                    <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Category</th>
+                    <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Date</th>
+                    <th className="text-right py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Amount</th>
+                    {isAdmin && <th className="py-2 w-20" />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenseList.map((ex) => (
+                    <tr key={ex._id} className="border-b border-slate-50 hover:bg-slate-50/50">
+                      <td className="py-2.5 text-slate-800 font-medium max-w-[200px] truncate">{ex.description}</td>
+                      <td className="py-2.5 text-slate-500">{ex.category}</td>
+                      <td className="py-2.5 text-slate-500">{formatDate(ex.date)}</td>
+                      <td className="py-2.5 text-right font-semibold text-rose-600">{formatINR(ex.amount)}</td>
+                      {isAdmin && (
+                        <td className="py-2.5 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => openEditExpense(ex)}
+                              className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
+                              title="Edit expense"
+                            >
+                              <Pencil size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteExpense(ex._id)}
+                              className="text-slate-300 hover:text-rose-500 transition-colors p-1"
+                              title="Delete expense"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Compliance breakdown */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -352,7 +578,6 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Tasks breakdown */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -392,7 +617,6 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Recent activity */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -425,6 +649,80 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      <Modal
+        open={showAddExpense}
+        onClose={() => { setShowAddExpense(false); setEditExpense(null); }}
+        title={editExpense ? "Edit Expense" : "Add Expense"}
+        description={editExpense ? "Update the expense details." : "Record a new business expense."}
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => { setShowAddExpense(false); setEditExpense(null); }}
+              className="px-3.5 py-2 text-sm font-medium text-slate-600 hover:text-slate-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="expense-form"
+              disabled={expSaving}
+              className="px-4 py-2 text-sm font-medium text-white bg-rose-600 rounded-md hover:bg-rose-700 disabled:opacity-50 transition-colors"
+            >
+              {expSaving ? "Saving..." : editExpense ? "Update expense" : "Save expense"}
+            </button>
+          </div>
+        }
+      >
+        <form id="expense-form" onSubmit={handleExpenseSubmit} className="space-y-4">
+          {expError && (
+            <p className="text-sm font-medium text-rose-600 bg-rose-50 rounded-md px-3 py-2">{expError}</p>
+          )}
+          <Input
+            label="Description"
+            required
+            placeholder="e.g. Office electricity bill"
+            value={expForm.description}
+            onChange={(e) => setExpForm({ ...expForm, description: e.target.value })}
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Amount"
+              required
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              value={expForm.amount}
+              onChange={(e) => setExpForm({ ...expForm, amount: e.target.value })}
+            />
+            <Select
+              label="Category"
+              value={expForm.category}
+              onChange={(e) => setExpForm({ ...expForm, category: e.target.value })}
+            >
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </Select>
+          </div>
+          <Input
+            label="Date"
+            required
+            type="date"
+            value={expForm.date}
+            onChange={(e) => setExpForm({ ...expForm, date: e.target.value })}
+          />
+          <Textarea
+            label="Notes (optional)"
+            placeholder="Any additional details..."
+            rows={2}
+            value={expForm.notes}
+            onChange={(e) => setExpForm({ ...expForm, notes: e.target.value })}
+          />
+        </form>
+      </Modal>
     </div>
   );
 }

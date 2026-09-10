@@ -16,6 +16,7 @@ export default function Modal({
   const titleId = useId();
   const panelRef = useRef(null);
   const previouslyFocused = useRef(null);
+  const onCloseRef = useRef(onClose);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,11 +24,15 @@ export default function Modal({
   }, []);
 
   useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
     if (!open) return;
 
     const panel = panelRef.current;
     const onKey = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key !== "Tab" || !panel) return;
       const focusables = panel.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -49,8 +54,11 @@ export default function Modal({
     document.body.style.overflow = "hidden";
 
     const t = setTimeout(() => {
-      const first = panel?.querySelector("input, select, textarea, button");
-      first?.focus();
+      const field = panel?.querySelector(
+        "input:not([type='hidden']):not([disabled]), select:not([disabled]), textarea:not([disabled])"
+      );
+      const fallback = panel?.querySelector("button, [href]");
+      (field || fallback)?.focus();
     }, 30);
 
     return () => {
@@ -59,7 +67,7 @@ export default function Modal({
       document.body.style.overflow = "";
       previouslyFocused.current?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 
