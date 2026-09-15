@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/mongodb";
 import Client from "@/models/Client";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { companyScope } from "@/lib/auth";
@@ -88,7 +89,14 @@ export async function POST(request) {
     const scope = companyScope(user) || {};
     const pan = (body.pan || "").toUpperCase();
     const gstin = (body.gstin || "").toUpperCase();
-    const assignedStaff = body.assignedStaff || null;
+    let assignedStaff = body.assignedStaff || null;
+
+    // Assigned staff must belong to the same tenant.
+    if (assignedStaff) {
+      const staff = await User.findOne({ _id: assignedStaff, isActive: true, ...scope }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+      assignedStaff = staff._id;
+    }
 
     const existingPan = await Client.findOne({ pan, isDeleted: { $ne: true }, ...scope }).lean();
     if (existingPan) return fail("A client with this PAN already exists.", 409);
@@ -104,7 +112,7 @@ export async function POST(request) {
         client = await Client.create({
           ...body,
           companyId: user.companyId,
-          clientCode: await nextClientCode(body.name),
+          clientCode: await nextClientCode(body.name, user.companyId),
           pan,
           gstin,
           assignedStaff,

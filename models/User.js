@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     permissions: [{ type: String }],
     dashboardFinancials: { type: Boolean, default: false },
+    lastLoginAt: { type: Date },
     passwordHash: { type: String },
     resetPasswordTokenHash: { type: String },
     resetPasswordExpires: { type: Date },

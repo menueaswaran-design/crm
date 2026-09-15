@@ -1,5 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import Notification from "@/models/Notification";
+import { createNotification } from "@/lib/notifications";
 import { ok, fail, handleError } from "@/lib/api";
 import { verifyFirebaseIdToken } from "@/lib/auth";
 
@@ -61,6 +63,47 @@ export async function POST(request) {
       );
     }
 
+    const loginAt = new Date();
+    user.lastLoginAt = loginAt;
+    await user.save();
+
+    if (user.role === "staff") {
+      const startOfDay = new Date(loginAt);
+      startOfDay.setHours(0, 0, 0, 0);
+      const alreadyLoggedToday = await Notification.exists({
+        companyId: user.companyId,
+        entityType: "User",
+        entityId: user._id,
+        type: "login",
+        createdAt: { $gte: startOfDay },
+      });
+
+      if (!alreadyLoggedToday) {
+        const admins = await User.find({
+          companyId: user.companyId,
+          role: "admin",
+          isActive: true,
+        })
+          .select("_id")
+          .lean();
+        const time = loginAt.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        });
+        for (const admin of admins) {
+          await createNotification({
+            userId: admin._id,
+            companyId: user.companyId,
+            type: "login",
+            title: "Staff Login",
+            message: `${user.name} logged into the system at ${time}.`,
+            entityType: "User",
+            entityId: user._id,
+          });
+        }
+      }
+    }
+
     return ok(
       {
         _id: user._id,
@@ -71,6 +114,7 @@ export async function POST(request) {
         isActive: user.isActive,
         avatarUrl: user.avatarUrl,
         companyId: user.companyId || null,
+        lastLoginAt: user.lastLoginAt || null,
       },
       "Account synced."
     );

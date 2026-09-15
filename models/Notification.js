@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const notificationSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
     type: { type: String },
     title: { type: String, required: true },
     message: { type: String },
@@ -14,5 +15,6 @@ const notificationSchema = new mongoose.Schema(
 );
 
 notificationSchema.index({ userId: 1, isRead: 1, createdAt: -1 });
+notificationSchema.index({ companyId: 1, userId: 1, isRead: 1 });
 
 export default mongoose.models.Notification || mongoose.model("Notification", notificationSchema);

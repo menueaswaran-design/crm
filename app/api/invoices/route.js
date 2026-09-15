@@ -59,7 +59,7 @@ export async function POST(request) {
     const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean();
     if (!client) return fail("Client not found.", 404);
 
-    const invoiceNumber = await nextInvoiceNumber();
+    const invoiceNumber = await nextInvoiceNumber(user.companyId);
     const calc = calculateInvoice({ items: body.items, gstRate: body.gstRate });
 
     const invoice = await Invoice.create({

@@ -12,7 +12,7 @@ import { SkeletonRows } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorBanner from "@/components/common/ErrorBanner";
-import { initials, getErrorMessage } from "@/lib/utils";
+import { initials, getErrorMessage, formatDateTime } from "@/lib/utils";
 
 export default function StaffPage() {
   const { user: currentUser } = useAuth();
@@ -77,12 +77,13 @@ export default function StaffPage() {
         Phone: u.phone || "",
         Role: u.role || "",
         Status: u.isActive ? "Active" : "Inactive",
+        "Last Login": u.lastLoginAt ? formatDateTime(u.lastLoginAt) : "",
       }));
       if (format === "csv") {
         downloadCSV({
           filename: "staff",
-          headers: ["Name", "Email", "Phone", "Role", "Status"],
-          rows: rows.map((r) => [r.Name, r.Email, r.Phone, r.Role, r.Status]),
+          headers: ["Name", "Email", "Phone", "Role", "Status", "Last Login"],
+          rows: rows.map((r) => [r.Name, r.Email, r.Phone, r.Role, r.Status, r["Last Login"]]),
         });
       } else {
         downloadExcel({ filename: "staff", sheetName: "Staff", rows });
@@ -160,6 +161,7 @@ export default function StaffPage() {
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Member</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Contact</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Role</th>
+                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Last Login</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Status</th>
                   {isAdmin && <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Actions</th>}
                 </tr>
@@ -191,6 +193,7 @@ export default function StaffPage() {
                           dot
                         />
                       </td>
+                      <td className="px-5 py-4 text-slate-600">{formatDateTime(u.lastLoginAt)}</td>
                       <td className="px-5 py-4">
                         <Badge label={u.isActive ? "Active" : "Inactive"} color={u.isActive ? "green" : "gray"} dot />
                       </td>

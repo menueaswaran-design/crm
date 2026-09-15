@@ -43,9 +43,6 @@ export async function POST(request) {
       return fail("Admin password is required (min 6 characters).", 400);
     }
 
-    const existingCompany = await Company.findOne({ companyName }).lean();
-    if (existingCompany) return fail("A company with this name already exists.", 409);
-
     const existingUser = await User.findOne({ email: adminEmail }).lean();
     if (existingUser) return fail("A user with this email already exists.", 409);
 

@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import Compliance from "@/models/Compliance";
 import Client from "@/models/Client";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
@@ -36,6 +37,11 @@ export async function PATCH(request, { params }) {
     }
     if (body.assignedStaff === "" || body.assignedStaff === null) {
       record.assignedStaff = null;
+    }
+    if (body.assignedStaff) {
+      const staff = await User.findOne({ _id: body.assignedStaff, isActive: true, companyId: user.companyId }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+      record.assignedStaff = staff._id;
     }
     if (body.dueDate) {
       record.dueDate = new Date(body.dueDate);

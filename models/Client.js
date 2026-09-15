@@ -28,7 +28,7 @@ const clientSchema = new mongoose.Schema(
 );
 
 clientSchema.index({ name: "text", email: "text", gstin: "text" });
-clientSchema.index({ clientCode: 1 }, { unique: true, sparse: true });
+clientSchema.index({ companyId: 1, clientCode: 1 }, { unique: true, sparse: true });
 clientSchema.index({ isDeleted: 1, category: 1, createdAt: -1 });
 clientSchema.index({ isDeleted: 1, assignedStaff: 1, createdAt: -1 });
 clientSchema.index({ pan: 1, isDeleted: 1 });

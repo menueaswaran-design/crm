@@ -175,13 +175,13 @@ export async function POST(request) {
         continue;
       }
 
-      const clientCode = await nextClientCode(row.data.name);
+      const clientCode = await nextClientCode(row.data.name, user.companyId);
       const existingCode = await Client.findOne({ clientCode, isDeleted: { $ne: true }, ...scope })
         .select("clientCode")
         .lean();
       if (existingCode) {
         // Rare: counter collision — retry once with the next sequence.
-        const retry = await nextClientCode(row.data.name);
+        const retry = await nextClientCode(row.data.name, user.companyId);
         row.data.clientCode = retry;
       } else {
         row.data.clientCode = clientCode;

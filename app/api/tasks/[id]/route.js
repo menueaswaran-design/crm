@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
@@ -26,6 +27,12 @@ export async function PATCH(request, { params }) {
     }
     if (body.assignedTo === "" || body.assignedTo === null) {
       task.assignedTo = null;
+    }
+    // Reassigned staff must belong to the same tenant.
+    if (task.assignedTo) {
+      const staff = await User.findOne({ _id: task.assignedTo, isActive: true, companyId: user.companyId }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+      task.assignedTo = staff._id;
     }
     if (body.dueDate) task.dueDate = new Date(body.dueDate);
 

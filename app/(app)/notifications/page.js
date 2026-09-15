@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Bell, CheckCheck, CalendarClock, AlertTriangle, CalendarDays, CreditCard, FileText, ClipboardList, ShieldAlert } from "lucide-react";
+import { Bell, CheckCheck, CalendarClock, AlertTriangle, CalendarDays, CreditCard, FileText, ClipboardList, ShieldAlert, LogIn } from "lucide-react";
 import { apiFetch } from "@/lib/client";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { SkeletonRows } from "@/components/common/Loading";
@@ -17,6 +17,7 @@ const TYPE_META = {
   PAYMENT_DUE: { icon: CreditCard, cls: "bg-emerald-50 text-emerald-600" },
   DOCUMENT_UPLOADED: { icon: FileText, cls: "bg-purple-50 text-purple-600" },
   TASK_ASSIGNED: { icon: ClipboardList, cls: "bg-teal-50 text-teal-600" },
+  LOGIN: { icon: LogIn, cls: "bg-sky-50 text-sky-600" },
 };
 
 export default function NotificationsPage() {

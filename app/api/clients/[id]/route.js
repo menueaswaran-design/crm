@@ -6,6 +6,7 @@ import Document from "@/models/Document";
 import Invoice from "@/models/Invoice";
 import Payment from "@/models/Payment";
 import Activity from "@/models/Activity";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission, requireAdmin, companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
@@ -99,6 +100,11 @@ export async function PATCH(request, { params }) {
     }
     if (body.assignedStaff === "" || body.assignedStaff === null) {
       client.assignedStaff = null;
+    }
+    if (body.assignedStaff) {
+      const staff = await User.findOne({ _id: body.assignedStaff, isActive: true, ...scope }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+      client.assignedStaff = staff._id;
     }
     client.pan = pan;
     client.gstin = gstin;

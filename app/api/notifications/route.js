@@ -12,8 +12,8 @@ export async function GET(request) {
     const limit = Math.min(Math.max(parseInt(searchParams.get("limit") || "30", 10), 1), 100);
 
     const [notifications, unreadCount] = await Promise.all([
-      Notification.find({ userId: user._id }).sort({ createdAt: -1 }).limit(limit).lean(),
-      Notification.countDocuments({ userId: user._id, isRead: false }),
+      Notification.find({ userId: user._id, companyId: user.companyId }).sort({ createdAt: -1 }).limit(limit).lean(),
+      Notification.countDocuments({ userId: user._id, companyId: user.companyId, isRead: false }),
     ]);
 
     return ok(notifications, "", { unreadCount });
@@ -29,13 +29,13 @@ export async function PATCH(request) {
     const body = await request.json();
 
     if (body.markAll) {
-      await Notification.updateMany({ userId: user._id }, { isRead: true });
+      await Notification.updateMany({ userId: user._id, companyId: user.companyId }, { isRead: true });
       return ok(null, "All notifications marked as read.");
     }
 
     if (body.id) {
       const n = await Notification.findOneAndUpdate(
-        { _id: body.id, userId: user._id },
+        { _id: body.id, userId: user._id, companyId: user.companyId },
         { isRead: true },
         { new: true }
       );

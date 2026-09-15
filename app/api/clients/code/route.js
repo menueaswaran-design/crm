@@ -4,8 +4,8 @@ import { previewNextClientSequence } from "@/lib/counter";
 
 export async function GET(request) {
   try {
-    await requirePermission(request, "clients");
-    const next = await previewNextClientSequence();
+    const user = await requirePermission(request, "clients");
+    const next = await previewNextClientSequence(user.companyId);
     return ok({ next });
   } catch (error) {
     return handleError(error);

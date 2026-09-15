@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const invoiceSchema = new mongoose.Schema(
   {
     companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", index: true },
-    invoiceNumber: { type: String, required: true, unique: true },
+    invoiceNumber: { type: String, required: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: "Client", required: true },
     invoiceDate: { type: Date, required: true },
     dueDate: { type: Date, required: true },
@@ -35,5 +35,6 @@ const invoiceSchema = new mongoose.Schema(
 
 invoiceSchema.index({ clientId: 1, invoiceDate: 1, status: 1, dueDate: 1 });
 invoiceSchema.index({ isDeleted: 1, status: 1, invoiceDate: -1 });
+invoiceSchema.index({ companyId: 1, invoiceNumber: 1 }, { unique: true });
 
 export default mongoose.models.Invoice || mongoose.model("Invoice", invoiceSchema);

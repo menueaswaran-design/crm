@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import Task from "@/models/Task";
 import Client from "@/models/Client";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { companyScope } from "@/lib/auth";
@@ -102,12 +103,18 @@ export async function POST(request) {
     }
 
     const scope = companyScope(user) || {};
-    const assignedTo = body.assignedTo || null;
+    let assignedTo = body.assignedTo || null;
 
     const client = body.clientId
       ? await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean()
       : null;
     if (body.clientId && !client) return fail("Client not found.", 404);
+
+    // Assigned staff must belong to the same tenant — never trust the client id.
+    if (assignedTo) {
+      const staff = await User.findOne({ _id: assignedTo, isActive: true, ...scope }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+    }
 
     const task = await Task.create({
       title: body.title,
@@ -133,6 +140,7 @@ export async function POST(request) {
     if (assignedTo) {
       await createNotification({
         userId: assignedTo,
+        companyId: user.companyId,
         type: "TASK_ASSIGNED",
         title: "New task assigned",
         message: `Task "${task.title}" has been assigned to you.`,

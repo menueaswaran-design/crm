@@ -16,14 +16,14 @@ export async function GET(request) {
     const scope = companyScope(user) || {};
     if (user.role === "staff") {
       const staff = await User.find({ isActive: true, role: "staff", ...scope })
-        .select("name email role avatarUrl")
+        .select("name email role avatarUrl lastLoginAt")
         .lean();
       return ok(staff);
     }
     if (user.role === "superAdmin") {
       return ok([]);
     }
-    const users = await User.find({ companyId: user.companyId }).select("name email phone role isActive avatarUrl firebaseUid permissions dashboardFinancials companyId").lean();
+    const users = await User.find({ companyId: user.companyId }).select("name email phone role isActive avatarUrl firebaseUid permissions dashboardFinancials lastLoginAt companyId").lean();
     return ok(users);
   } catch (error) {
     return handleError(error);

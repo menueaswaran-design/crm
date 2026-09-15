@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/mongodb";
 import Compliance from "@/models/Compliance";
 import Client from "@/models/Client";
+import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { companyScope } from "@/lib/auth";
@@ -77,10 +78,17 @@ export async function POST(request) {
     }
 
     const scope = companyScope(user) || {};
-    const assignedStaff = body.assignedStaff || null;
+    let assignedStaff = body.assignedStaff || null;
 
     const client = await Client.findOne({ _id: body.clientId, isDeleted: { $ne: true }, ...scope }).lean();
     if (!client) return fail("Client not found.", 404);
+
+    // Assigned staff must belong to the same tenant.
+    if (assignedStaff) {
+      const staff = await User.findOne({ _id: assignedStaff, isActive: true, ...scope }).select("_id").lean();
+      if (!staff) return fail("Assigned staff member not found in your company.", 404);
+      assignedStaff = staff._id;
+    }
 
     const dueDate = new Date(body.dueDate);
     const status = endOfDay(dueDate) < new Date() ? "OVERDUE" : "PENDING";
@@ -106,6 +114,7 @@ export async function POST(request) {
     if (assignedStaff) {
       await createNotification({
         userId: assignedStaff,
+        companyId: user.companyId,
         type: "COMPLIANCE_DUE",
         title: "Compliance assigned",
         message: `${record.type} for ${client.name} is due on ${dueDate.toLocaleDateString("en-IN")}.`,

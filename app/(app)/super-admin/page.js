@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Plus, Users, RefreshCw } from "lucide-react";
-import { apiFetch, postData } from "@/lib/client";
+import { Building2, Plus, Users, RefreshCw, Pencil, History } from "lucide-react";
+import { apiFetch, postData, patchData } from "@/lib/client";
 import { useAuth } from "@/context/AuthContext";
 import { getDefaultRoute } from "@/lib/permissions";
 import Badge from "@/components/common/Badge";
@@ -11,6 +11,7 @@ import EmptyState from "@/components/common/EmptyState";
 import { SkeletonRows } from "@/components/common/Loading";
 import Button from "@/components/common/Button";
 import ErrorBanner from "@/components/common/ErrorBanner";
+import Modal from "@/components/common/Modal";
 import { getErrorMessage } from "@/lib/utils";
 
 export default function SuperAdminPage() {
@@ -31,6 +32,11 @@ export default function SuperAdminPage() {
   });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const [editing, setEditing] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editActive, setEditActive] = useState(true);
+  const [editError, setEditError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,6 +84,31 @@ export default function SuperAdminPage() {
     }
   };
 
+  const openEdit = (c) => {
+    setEditing(c);
+    setEditName(c.companyName || "");
+    setEditActive(c.isActive !== false);
+    setEditError("");
+  };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setEditError("");
+    setSaving(true);
+    try {
+      await patchData(`/api/companies/${editing._id}`, {
+        companyName: editName,
+        isActive: editActive,
+      });
+      setEditing(null);
+      load();
+    } catch (err) {
+      setEditError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -86,7 +117,8 @@ export default function SuperAdminPage() {
             Companies &amp; Admins
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Create a company and its admin account. Each admin works in their own isolated workspace.
+            Each company gets a unique Organisation ID (orgId). Even two companies with the same
+            name are fully isolated — tenancy never depends on the name.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -190,9 +222,11 @@ export default function SuperAdminPage() {
               <thead>
                 <tr className="text-left text-xs text-slate-500 border-b border-slate-100 bg-slate-50/60">
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Company</th>
+                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Org ID</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Admin</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Status</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Created</th>
+                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -205,6 +239,12 @@ export default function SuperAdminPage() {
                         </div>
                         <p className="font-semibold text-slate-900">{c.companyName}</p>
                       </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <code className="text-xs font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                        {c._id}
+                      </code>
+                      <p className="text-[11px] text-slate-400 mt-0.5">orgId → tenant key</p>
                     </td>
                     <td className="px-5 py-4">
                       <p className="font-medium text-slate-900">{c.adminUserId?.name || "—"}</p>
@@ -224,6 +264,11 @@ export default function SuperAdminPage() {
                         year: "numeric",
                       })}
                     </td>
+                    <td className="px-5 py-4 text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(c)}>
+                        <Pencil size={14} /> Edit
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -231,6 +276,80 @@ export default function SuperAdminPage() {
           </div>
         </div>
       )}
+
+      <Modal
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        title="Edit organisation"
+        description="Tenancy stays keyed to the Org ID — renaming can never leak data across tenants."
+        footer={
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="secondary" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button loading={saving} onClick={saveEdit}>
+              Save changes
+            </Button>
+          </div>
+        }
+      >
+        {editing && (
+          <div className="space-y-4">
+            {editError && <ErrorBanner message={editError} />}
+
+            <div>
+              <label className="label-base">Org ID (read-only tenant key)</label>
+              <code className="block text-xs font-mono text-slate-500 bg-slate-100 px-2 py-1.5 rounded break-all">
+                {editing._id}
+              </code>
+            </div>
+
+            <div>
+              <label className="label-base">Company name</label>
+              <input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="input-base"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={editActive}
+                onChange={(e) => setEditActive(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-300"
+              />
+              Active (admins can log in and access this tenant)
+            </label>
+
+            {Array.isArray(editing.editHistory) && editing.editHistory.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                  <History size={13} /> Edit history
+                </div>
+                <ul className="divide-y divide-slate-100 border border-slate-100 rounded-lg">
+                  {editing.editHistory.slice(-8).reverse().map((h, i) => (
+                    <li key={i} className="px-3 py-2 text-xs">
+                      <p className="text-slate-700">
+                        <span className="font-medium">{h.editedByName || "super admin"}</span> changed{" "}
+                        <code className="font-mono text-slate-500">{h.field}</code> from{" "}
+                        <span className="text-slate-400 line-through inline-block max-w-[120px] truncate align-bottom">
+                          {h.oldValue}
+                        </span>{" "}
+                        to <span className="font-medium text-slate-900">{h.newValue}</span>
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {new Date(h.editedAt).toLocaleString("en-IN")}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

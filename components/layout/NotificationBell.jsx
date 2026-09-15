@@ -11,6 +11,7 @@ import {
   FileUp,
   ClipboardList,
   FileCheck2,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/client";
@@ -24,6 +25,7 @@ const TYPE_META = {
   PAYMENT_DUE: { icon: Banknote, cls: "bg-emerald-50 text-emerald-600" },
   DOCUMENT_UPLOADED: { icon: FileUp, cls: "bg-brand-50 text-brand-600" },
   TASK_ASSIGNED: { icon: ClipboardList, cls: "bg-indigo-50 text-indigo-600" },
+  LOGIN: { icon: LogIn, cls: "bg-sky-50 text-sky-600" },
 };
 
 export default function NotificationBell() {

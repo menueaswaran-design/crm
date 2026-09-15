@@ -45,7 +45,7 @@ export async function POST(request, { params }) {
     });
 
     // Recalculate totals from payment history (source of truth).
-    const payments = await Payment.find({ invoiceId: invoice._id });
+    const payments = await Payment.find({ invoiceId: invoice._id, companyId: user.companyId });
     const paidAmount = payments.reduce((s, p) => s + p.amount, 0);
     invoice.paidAmount = paidAmount;
     invoice.outstandingAmount = Math.max(0, invoice.totalAmount - paidAmount);
