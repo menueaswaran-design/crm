@@ -13,6 +13,7 @@ import {
   FileCheck2,
   LogIn,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { apiFetch } from "@/lib/client";
 import { formatDate } from "@/lib/utils";
@@ -35,6 +36,7 @@ export default function NotificationBell() {
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
   const ref = useRef(null);
+  const router = useRouter();
 
   const load = async () => {
     try {
@@ -117,8 +119,18 @@ export default function NotificationBell() {
             {items.map((n) => {
               const meta = TYPE_META[n.type] || { icon: Bell, cls: "bg-slate-100 text-slate-500" };
               const Icon = meta.icon;
+              const isLogin = n.type === "LOGIN";
               return (
-                <div key={String(n._id)} className={`px-5 py-3.5 flex items-start gap-3 ${n.isRead ? "" : "bg-brand-50/40"}`}>
+                <div
+                  key={String(n._id)}
+                  className={`px-5 py-3.5 flex items-start gap-3 ${n.isRead ? "" : "bg-brand-50/40"} ${isLogin ? "cursor-pointer hover:bg-slate-50" : ""}`}
+                  onClick={() => {
+                    if (isLogin) {
+                      router.push("/staff?tab=login-details");
+                      setOpen(false);
+                    }
+                  }}
+                >
                   <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${meta.cls}`}>
                     <Icon size={15} />
                   </div>

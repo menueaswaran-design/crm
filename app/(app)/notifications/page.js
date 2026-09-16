@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, CalendarClock, AlertTriangle, CalendarDays, CreditCard, FileText, ClipboardList, ShieldAlert, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/client";
 import { formatDate, getErrorMessage } from "@/lib/utils";
 import { SkeletonRows } from "@/components/common/Loading";
@@ -24,6 +25,7 @@ export default function NotificationsPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -82,7 +84,13 @@ export default function NotificationsPage() {
             return (
               <button
                 key={String(n._id)}
-                onClick={() => !n.isRead && markOne(n._id)}
+                onClick={() => {
+                  if (n.type === "LOGIN") {
+                    router.push("/staff?tab=login-details");
+                  } else if (!n.isRead) {
+                    markOne(n._id);
+                  }
+                }}
                 className={`w-full text-left px-5 py-4 flex items-start gap-3.5 transition-colors ${
                   n.isRead ? "bg-white hover:bg-slate-50" : "bg-brand-50/40 hover:bg-brand-50/70"
                 }`}

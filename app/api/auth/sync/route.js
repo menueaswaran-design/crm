@@ -1,5 +1,6 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import LoginHistory from "@/models/LoginHistory";
 import Notification from "@/models/Notification";
 import { createNotification } from "@/lib/notifications";
 import { ok, fail, handleError } from "@/lib/api";
@@ -66,6 +67,16 @@ export async function POST(request) {
     const loginAt = new Date();
     user.lastLoginAt = loginAt;
     await user.save();
+
+    if (user.companyId) {
+      await LoginHistory.create({
+        userId: user._id,
+        companyId: user.companyId,
+        name: user.name,
+        email: user.email,
+        timestamp: loginAt,
+      });
+    }
 
     if (user.role === "staff") {
       const startOfDay = new Date(loginAt);

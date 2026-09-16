@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power, Download } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power, Download, LogIn, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { apiFetch, patchData, deleteData } from "@/lib/client";
 import { downloadCSV, downloadExcel } from "@/lib/export";
 import { useAuth } from "@/context/AuthContext";
 import StaffForm from "@/components/staff/StaffForm";
+import LoginDetails from "@/components/staff/LoginDetails";
 import Badge from "@/components/common/Badge";
 import EmptyState from "@/components/common/EmptyState";
 import { SkeletonRows } from "@/components/common/Loading";
@@ -14,9 +16,13 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorBanner from "@/components/common/ErrorBanner";
 import { initials, getErrorMessage, formatDateTime } from "@/lib/utils";
 
-export default function StaffPage() {
+function StaffPage() {
+  const searchParams = useSearchParams();
   const { user: currentUser } = useAuth();
   const isAdmin = currentUser?.role === "admin";
+  const [tab, setTab] = useState(() =>
+    searchParams.get("tab") === "login-details" ? "login-details" : "members"
+  );
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -100,21 +106,50 @@ export default function StaffPage() {
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Staff</h1>
           <p className="text-sm text-slate-500 mt-0.5">Team members and access</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
-            <Download size={15} /> CSV
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
-            <Download size={15} /> Excel
-          </Button>
-          {isAdmin && (
-            <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-              <UserPlus size={15} /> Add Staff
+        {tab === "members" && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
+              <Download size={15} /> CSV
             </Button>
-          )}
-        </div>
+            <Button variant="secondary" size="sm" onClick={() => handleExport("excel")} loading={exporting === "excel"} disabled={!!exporting}>
+              <Download size={15} /> Excel
+            </Button>
+            {isAdmin && (
+              <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
+                <UserPlus size={15} /> Add Staff
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
+      <div className="flex items-center gap-1 border-b border-slate-200">
+        <button
+          onClick={() => setTab("members")}
+          className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            tab === "members"
+              ? "border-brand-600 text-brand-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <Users size={15} /> Staff Members
+        </button>
+        <button
+          onClick={() => setTab("login-details")}
+          className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            tab === "login-details"
+              ? "border-brand-600 text-brand-700"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          <LogIn size={15} /> Login Details
+        </button>
+      </div>
+
+      {tab === "login-details" ? (
+        <LoginDetails />
+      ) : (
+        <>
       {!isAdmin && (
         <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
           You have view-only access. Only administrators can add or edit staff members.
@@ -253,6 +288,16 @@ export default function StaffPage() {
         onCancel={() => setDeactivating(null)}
         loading={actionLoading}
       />
+      </>
+      )}
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<SkeletonRows count={3} />}>
+      <StaffPage />
+    </Suspense>
   );
 }

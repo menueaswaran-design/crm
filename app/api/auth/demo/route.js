@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
+import LoginHistory from "@/models/LoginHistory";
 import { createDemoToken } from "@/lib/auth";
 import { fail } from "@/lib/api";
 
@@ -46,6 +47,20 @@ export async function POST(request) {
     }
 
     const token = await createDemoToken(user);
+
+    const loginAt = new Date();
+    user.lastLoginAt = loginAt;
+    await user.save();
+
+    if (user.companyId) {
+      await LoginHistory.create({
+        userId: user._id,
+        companyId: user.companyId,
+        name: user.name,
+        email: user.email,
+        timestamp: loginAt,
+      });
+    }
 
     return NextResponse.json({
       success: true,
