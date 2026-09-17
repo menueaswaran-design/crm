@@ -1,11 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Upload, Search, Download } from "lucide-react";
+import { Upload, Search, Download, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { getList, deleteData, buildQuery } from "@/lib/client";
 import { useDebounce } from "@/hooks/useDebounce";
 import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { formatBytes, formatDate, getErrorMessage, DOCUMENT_CATEGORIES } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { hasPermission } from "@/lib/permissions";
 import DocumentCard from "@/components/documents/DocumentCard";
 import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
 import Pagination from "@/components/common/Pagination";
@@ -16,6 +19,8 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorBanner from "@/components/common/ErrorBanner";
 
 export default function DocumentsPage() {
+  const { user } = useAuth();
+  const showAi = hasPermission(user, "aiAnalyzer");
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -113,6 +118,14 @@ export default function DocumentsPage() {
           <p className="text-sm text-slate-500 mt-0.5">Client files and uploads</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {showAi && (
+            <Link
+              href="/ai-analyzer"
+              className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              <Sparkles size={14} className="text-indigo-600" /> AI Analyzer
+            </Link>
+          )}
           <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
             <Download size={15} /> CSV
           </Button>

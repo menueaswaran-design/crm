@@ -7,6 +7,7 @@ import { requirePermission } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
 import { endOfDay } from "@/lib/status";
 import { generateNextCompliance, refreshComplianceReminders } from "@/lib/reminders";
+import { buildDocumentChecklist } from "@/lib/documentChecklists";
 
 export async function PATCH(request, { params }) {
   try {
@@ -50,7 +51,45 @@ export async function PATCH(request, { params }) {
       }
     }
 
+    // Toggle or set a checklist item: { checklistKey, received: true|false }
+    if (body.checklistKey) {
+      if (!record.documentChecklist?.length) {
+        record.documentChecklist = buildDocumentChecklist({
+          type: record.type,
+          category: record.category,
+        });
+      }
+      const item = record.documentChecklist.find(
+        (d) => d.key === body.checklistKey || d.name === body.checklistKey
+      );
+      if (!item) return fail("Checklist item not found.", 404);
+      const received = body.received !== false;
+      item.received = received;
+      item.receivedAt = received ? new Date() : null;
+      record.markModified("documentChecklist");
+    }
+
+    // Seed empty checklist for older records
+    let seededChecklist = null;
+    if (body.seedChecklist && !record.documentChecklist?.length) {
+      seededChecklist = buildDocumentChecklist({
+        type: record.type,
+        category: record.category,
+      });
+      record.documentChecklist = seededChecklist;
+      record.markModified("documentChecklist");
+    }
+
     await record.save();
+
+    // Belt-and-suspenders: persist via $set so HMR/stale schema cannot drop the field
+    if (seededChecklist) {
+      await Compliance.updateOne(
+        { _id: record._id },
+        { $set: { documentChecklist: seededChecklist } }
+      );
+      record.documentChecklist = seededChecklist;
+    }
 
     if (body.status === "COMPLETED") {
       await logActivity({
@@ -62,15 +101,29 @@ export async function PATCH(request, { params }) {
         description: `${user.name} completed ${record.type} for ${client?.name || "client"}`,
       });
 
-      // Auto-create the NEXT occurrence for recurring filings (GST monthly, ITR annual, etc.)
       const nextRecord = await generateNextCompliance(record);
       nextScheduled = nextRecord ? nextRecord.dueDate : null;
     }
 
-    await refreshComplianceReminders();
+    // Avoid running heavy reminder jobs for lightweight checklist toggles/seeds
+    if (body.status !== undefined) {
+      await refreshComplianceReminders();
+    }
+
+    const checklistOut = (seededChecklist || record.documentChecklist || []).map((d) => ({
+      key: d.key,
+      name: d.name,
+      received: !!d.received,
+      receivedAt: d.receivedAt || null,
+    }));
 
     return ok(
-      { ...record.toJSON(), nextScheduled },
+      {
+        _id: record._id,
+        status: record.status,
+        documentChecklist: checklistOut,
+        nextScheduled,
+      },
       nextScheduled
         ? "Marked complete. Next occurrence scheduled."
         : "Compliance updated successfully."

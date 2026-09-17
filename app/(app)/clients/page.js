@@ -44,6 +44,10 @@ function ClientsPage() {
     if (searchParams.get("all") === "1") {
       setShowAll(true);
     }
+    const a = searchParams.get("assigned");
+    if (a === "unassigned" || a === "assigned") {
+      setAssigned(a);
+    }
   }, [searchParams]);
 
   const shouldLoad = showAll || hasActiveQuery;

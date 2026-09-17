@@ -8,6 +8,7 @@ import {
   Users,
   FileCheck2,
   CheckSquare,
+  CalendarDays,
   FolderOpen,
   Receipt,
   UserCog,
@@ -23,6 +24,7 @@ import NotificationBell from "@/components/layout/NotificationBell";
 import UserMenu from "@/components/layout/UserMenu";
 
 const NAV_ITEMS = [
+  { href: "/today", label: "Today", icon: CalendarDays, permission: "dashboard" },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" },
   { href: "/clients", label: "Clients", icon: Users, permission: "clients" },
   { href: "/compliance", label: "Compliance", icon: FileCheck2, permission: "compliance" },
@@ -46,7 +48,7 @@ export default function TopNav() {
   const homeHref = getDefaultRoute(user);
 
   const isActive = (href) =>
-    href === "/dashboard"
+    href === "/dashboard" || href === "/today"
       ? pathname === href
       : pathname === href || pathname.startsWith(`${href}/`);
 

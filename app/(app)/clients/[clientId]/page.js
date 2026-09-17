@@ -21,8 +21,9 @@ import {
   CheckSquare,
   Pencil,
   Plus,
+  Package,
 } from "lucide-react";
-import { apiFetch, deleteData } from "@/lib/client";
+import { apiFetch, deleteData, postData } from "@/lib/client";
 import { maskAadhaar, formatDate, daysRemaining, getErrorMessage } from "@/lib/utils";
 import { generateClientMessage } from "@/lib/whatsappMessages";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
@@ -51,6 +52,10 @@ export default function ClientDetailsPage() {
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [packages, setPackages] = useState([]);
+  const [packageId, setPackageId] = useState("");
+  const [applyingPackage, setApplyingPackage] = useState(false);
+  const [packageMsg, setPackageMsg] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,6 +73,36 @@ export default function ClientDetailsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!clientId) return;
+    (async () => {
+      try {
+        const json = await apiFetch(`/api/clients/${clientId}/onboard`);
+        setPackages(json.data?.packages || []);
+      } catch {
+        setPackages([]);
+      }
+    })();
+  }, [clientId]);
+
+  const applyPackage = async () => {
+    if (!packageId) return;
+    setApplyingPackage(true);
+    setPackageMsg("");
+    try {
+      const res = await postData(`/api/clients/${clientId}/onboard`, { packageId });
+      setPackageMsg(res?.packageLabel
+        ? `Created ${res.created} filings from "${res.packageLabel}".`
+        : "Compliance package applied.");
+      setPackageId("");
+      await load();
+    } catch (err) {
+      setPackageMsg(getErrorMessage(err));
+    } finally {
+      setApplyingPackage(false);
+    }
+  };
 
   if (loading) return <Loading label="Loading client details..." />;
   if (error)
@@ -278,6 +313,49 @@ export default function ClientDetailsPage() {
                 View all
               </Link>
             </div>
+
+            {packages.length > 0 && (
+              <div className="mb-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3.5 space-y-2.5">
+                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Package size={15} className="text-indigo-600" />
+                  Apply onboarding package
+                </div>
+                <p className="text-xs text-slate-500">
+                  Auto-create GST / ITR / ROC filings for this client in one click.
+                </p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <select
+                    value={packageId}
+                    onChange={(e) => setPackageId(e.target.value)}
+                    className="input-base flex-1 text-sm"
+                  >
+                    <option value="">Select package…</option>
+                    {packages.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    size="sm"
+                    onClick={applyPackage}
+                    loading={applyingPackage}
+                    disabled={!packageId || applyingPackage}
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {packageId && (
+                  <p className="text-xs text-slate-500">
+                    {packages.find((p) => p.id === packageId)?.description}
+                  </p>
+                )}
+                {packageMsg && (
+                  <p className="text-xs font-medium text-indigo-700">{packageMsg}</p>
+                )}
+              </div>
+            )}
+
             {compliance.length === 0 ? (
               <EmptyState compact title="No compliance records" description="Filings for this client will appear here." />
             ) : (

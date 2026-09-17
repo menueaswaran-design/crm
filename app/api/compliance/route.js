@@ -9,6 +9,7 @@ import { logActivity } from "@/lib/activity";
 import { createNotification } from "@/lib/notifications";
 import { refreshOverdueCompliance, endOfDay } from "@/lib/status";
 import { refreshComplianceReminders, ensureRecurringRollforward } from "@/lib/reminders";
+import { buildDocumentChecklist } from "@/lib/documentChecklists";
 
 const UNASSIGNED_QUERY = {
   $or: [{ assignedStaff: null }, { assignedStaff: { $exists: false } }],
@@ -59,6 +60,20 @@ export async function GET(request) {
       Compliance.countDocuments(query),
     ]);
 
+    // Backfill missing checklists for older filings (page only — lightweight)
+    const needsSeed = records.filter(
+      (r) => r.status !== "COMPLETED" && (!r.documentChecklist || !r.documentChecklist.length)
+    );
+    if (needsSeed.length) {
+      await Promise.all(
+        needsSeed.map((r) => {
+          const checklist = buildDocumentChecklist({ type: r.type, category: r.category });
+          r.documentChecklist = checklist;
+          return Compliance.updateOne({ _id: r._id }, { $set: { documentChecklist: checklist } });
+        })
+      );
+    }
+
     return ok(records, "", {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) || 1 },
     });
@@ -100,6 +115,10 @@ export async function POST(request) {
       dueDate,
       status,
       createdBy: user._id,
+      documentChecklist:
+        Array.isArray(body.documentChecklist) && body.documentChecklist.length
+          ? body.documentChecklist
+          : buildDocumentChecklist({ type: body.type, category: body.category }),
     });
 
     await logActivity({

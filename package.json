@@ -10,6 +10,7 @@
     "create-admin": "node --env-file=.env.local scripts/create-admin.mjs"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.7.1",
     "cloudinary": "^2.10.0",
     "date-fns": "^4.4.0",

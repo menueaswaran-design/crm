@@ -31,6 +31,8 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
   const [staff, setStaff] = useState([]);
   const [serverError, setServerError] = useState("");
   const [nextSeq, setNextSeq] = useState("0001");
+  const [packages, setPackages] = useState([]);
+  const [packageId, setPackageId] = useState("");
 
   const {
     register,
@@ -66,6 +68,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
   useEffect(() => {
     if (open) {
       setServerError("");
+      setPackageId("");
       reset(
         client
           ? {
@@ -96,6 +99,22 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
     }
   }, [open, client, reset]);
 
+  const categoryValue = watch("category");
+
+  useEffect(() => {
+    if (!open || client) return;
+    (async () => {
+      try {
+        const json = await apiFetch(
+          `/api/onboarding-packages${categoryValue ? `?category=${encodeURIComponent(categoryValue)}` : ""}`
+        );
+        setPackages(json.data || []);
+      } catch {
+        setPackages([]);
+      }
+    })();
+  }, [open, client, categoryValue]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -117,7 +136,18 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
       if (client) {
         await patchData(`/api/clients/${client._id}`, payload);
       } else {
-        await postData("/api/clients", payload);
+        const created = await postData("/api/clients", payload);
+        if (packageId && created?._id) {
+          try {
+            await postData(`/api/clients/${created._id}/onboard`, { packageId });
+          } catch (pkgErr) {
+            setServerError(
+              `Client saved, but package failed: ${pkgErr.message || "unknown error"}. Apply it from the client page.`
+            );
+            onSaved(created);
+            return;
+          }
+        }
       }
       onSaved();
       onClose();
@@ -179,6 +209,28 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
               </option>
             ))}
           </Select>
+          {!client && (
+            <div className="sm:col-span-2">
+              <Select
+                label="Onboarding package (optional)"
+                value={packageId}
+                onChange={(e) => setPackageId(e.target.value)}
+                hint="Auto-creates compliance filings for the year (GSTR, ITR, ROC, etc.)."
+              >
+                <option value="">Skip — add filings later</option>
+                {packages.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </Select>
+              {packageId && (
+                <p className="mt-1.5 text-xs text-slate-500">
+                  {packages.find((p) => p.id === packageId)?.description}
+                </p>
+              )}
+            </div>
+          )}
           <div className="sm:col-span-2">
             <Textarea label="Address" required placeholder="Full address" error={errors.address?.message} {...register("address")} />
           </div>
