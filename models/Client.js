@@ -17,6 +17,8 @@ const clientSchema = new mongoose.Schema(
     email: { type: String, lowercase: true, trim: true },
     phone: { type: String, trim: true },
     address: { type: String, trim: true },
+    fatherName: { type: String, trim: true },
+    extraFields: { type: Map, of: String, default: {} },
     assignedStaff: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -33,5 +35,6 @@ clientSchema.index({ isDeleted: 1, category: 1, createdAt: -1 });
 clientSchema.index({ isDeleted: 1, assignedStaff: 1, createdAt: -1 });
 clientSchema.index({ pan: 1, isDeleted: 1 });
 clientSchema.index({ gstin: 1, isDeleted: 1 });
+clientSchema.index({ aadhaar: 1, isDeleted: 1 });
 
 export default mongoose.models.Client || mongoose.model("Client", clientSchema);

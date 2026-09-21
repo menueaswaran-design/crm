@@ -22,7 +22,7 @@ export async function PATCH(request, { params }) {
     const updated = await User.findOneAndUpdate(
       { _id: id, companyId: user.companyId },
       update,
-      { new: true, runValidators: true }
+      { returnDocument: "after", runValidators: true }
     );
     if (!updated) return fail("User not found.", 404);
 
@@ -45,7 +45,7 @@ export async function DELETE(request, { params }) {
     const updated = await User.findOneAndUpdate(
       { _id: id, companyId: user.companyId },
       { isActive: false },
-      { new: true }
+      { returnDocument: "after" }
     );
     if (!updated) return fail("User not found.", 404);
 

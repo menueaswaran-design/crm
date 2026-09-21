@@ -24,6 +24,7 @@ const schema = z.object({
   email: z.string().email("Invalid email address."),
   phone: z.string().regex(/^(\+91[\s-]?)?[0]?[6-9]\d{9}$/, "Invalid Indian phone number."),
   address: z.string().min(1, "Address is required."),
+  fatherName: z.string().optional().or(z.literal("")),
   assignedStaff: z.string().optional().or(z.literal("")),
 });
 
@@ -78,6 +79,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
               email: client.email,
               phone: client.phone,
               address: client.address,
+              fatherName: client.fatherName || "",
               assignedStaff: client.assignedStaff?._id || client.assignedStaff || "",
             }
           : {
@@ -90,6 +92,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
               email: "",
               phone: "",
               address: "",
+              fatherName: "",
               assignedStaff: "",
             }
       );
@@ -171,6 +174,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
           <Input label="CIN" placeholder="CIN (optional)" error={errors.cin?.message} {...register("cin")} />
           <Input label="Email" type="email" required placeholder="client@company.com" error={errors.email?.message} {...register("email")} />
           <Input label="Phone" required placeholder="+91 98765 43210" error={errors.phone?.message} {...register("phone")} />
+          <Input label="Father Name" placeholder="Father's name" error={errors.fatherName?.message} {...register("fatherName")} />
           <Select label="Assigned Staff" error={errors.assignedStaff?.message} {...register("assignedStaff")}>
             <option value="">Unassigned</option>
             {staff.map((u) => (

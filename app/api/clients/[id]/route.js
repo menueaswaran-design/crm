@@ -93,7 +93,7 @@ export async function PATCH(request, { params }) {
 
     const fields = [
       "name", "category", "aadhaar", "cin", "email", "phone", "address",
-      "assignedStaff", "status",
+      "fatherName", "assignedStaff", "status",
     ];
     for (const f of fields) {
       if (body[f] !== undefined) client[f] = body[f];

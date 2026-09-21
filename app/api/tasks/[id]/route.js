@@ -64,7 +64,7 @@ export async function DELETE(request, { params }) {
     const task = await Task.findOneAndUpdate(
       { _id: id, companyId: user.companyId },
       { isDeleted: true },
-      { new: true }
+      { returnDocument: "after" }
     );
     if (!task) return fail("Task not found.", 404);
 

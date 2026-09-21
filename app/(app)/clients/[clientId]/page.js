@@ -112,8 +112,13 @@ export default function ClientDetailsPage() {
     { icon: Mail, label: "Email", value: client.email || "—" },
     { icon: Phone, label: "Phone", value: client.phone || "—" },
     { icon: MapPin, label: "Address", value: client.address || "—" },
+    { icon: User, label: "Father Name", value: client.fatherName || "—" },
     { icon: User, label: "Assigned Staff", value: client.assignedStaff?.name || "Unassigned" },
   ];
+
+  const extraFields = client.extraFields && typeof client.extraFields === "object"
+    ? Object.entries(client.extraFields)
+    : [];
 
   const statTiles = [
     { label: "Compliance", value: counts.compliance ?? compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
@@ -209,6 +214,22 @@ export default function ClientDetailsPage() {
                 </div>
               </div>
             ))}
+            {extraFields.length > 0 && (
+              <>
+                <div className="border-t border-slate-100 pt-3 mt-3">
+                  <p className="text-[11px] uppercase tracking-wider text-slate-400 mb-3">Additional Fields</p>
+                </div>
+                {extraFields.map(([key, value]) => (
+                  <div key={key} className="flex items-start gap-3">
+                    <FileText size={15} className="text-slate-300 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <dt className="text-[11px] uppercase tracking-wider text-slate-400">{key}</dt>
+                      <dd className="text-sm text-slate-800 break-words font-medium">{value || "—"}</dd>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </dl>
         </div>
 

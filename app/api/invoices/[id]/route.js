@@ -72,7 +72,7 @@ export async function DELETE(request, { params }) {
     const invoice = await Invoice.findOneAndUpdate(
       { _id: id, companyId: user.companyId },
       { isDeleted: true },
-      { new: true }
+      { returnDocument: "after" }
     );
     if (!invoice) return fail("Invoice not found.", 404);
 
