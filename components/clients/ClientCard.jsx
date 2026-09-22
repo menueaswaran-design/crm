@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Pencil, Trash2, Mail, Phone, IdCard, Building2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
 
 function initials(name) {
@@ -17,9 +18,10 @@ function initials(name) {
     .toUpperCase();
 }
 
-export default function ClientCard({ client, onEdit, onDelete }) {
+export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
   const unassigned = !client.assignedStaff;
   const [whatsappOpen, setWhatsappOpen] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   const handleWhatsApp = () => {
     setWhatsappOpen(true);
@@ -44,7 +46,6 @@ export default function ClientCard({ client, onEdit, onDelete }) {
                 {client.clientCode || "—"}
               </span>
               <CategoryBadge category={client.category} />
-              {unassigned && <CategoryBadge category="Unassigned" />}
             </div>
           </div>
         </div>
@@ -100,7 +101,14 @@ export default function ClientCard({ client, onEdit, onDelete }) {
       <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
         <p className="text-xs text-slate-500 truncate">
           {unassigned ? (
-            <span className="font-medium text-amber-700">Unassigned</span>
+            <button
+              type="button"
+              onClick={() => setAssignOpen(true)}
+              className="font-medium text-amber-700 hover:underline cursor-pointer"
+              title="Assign staff"
+            >
+              Unassigned
+            </button>
           ) : (
             <>Staff: <span className="font-medium text-slate-700">{client.assignedStaff?.name}</span></>
           )}
@@ -121,6 +129,13 @@ export default function ClientCard({ client, onEdit, onDelete }) {
       initialMessage={generateClientMessage({ client })}
       clientId={client._id}
       messageType="CLIENT_MESSAGE"
+    />
+
+    <AssignStaffModal
+      open={assignOpen}
+      onClose={() => setAssignOpen(false)}
+      client={client}
+      onAssigned={onAssigned}
     />
     </>
   );

@@ -28,6 +28,7 @@ import { generateClientMessage } from "@/lib/whatsappMessages";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
+import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
@@ -51,6 +52,7 @@ export default function ClientDetailsPage() {
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -113,7 +115,7 @@ export default function ClientDetailsPage() {
     { icon: Phone, label: "Phone", value: client.phone || "—" },
     { icon: MapPin, label: "Address", value: client.address || "—" },
     { icon: User, label: "Father Name", value: client.fatherName || "—" },
-    { icon: User, label: "Assigned Staff", value: client.assignedStaff?.name || "Unassigned" },
+    { icon: User, label: "Assigned Staff", value: client.assignedStaff?.name || "Unassigned", assignible: true },
   ];
 
   const extraFields = client.extraFields && typeof client.extraFields === "object"
@@ -210,7 +212,20 @@ export default function ClientDetailsPage() {
                 <item.icon size={15} className="text-slate-300 mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <dt className="text-[11px] uppercase tracking-wider text-slate-400">{item.label}</dt>
-                  <dd className="text-sm text-slate-800 break-words font-medium">{item.value}</dd>
+                  {item.assignible ? (
+                    <dd className="text-sm break-words font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setAssignOpen(true)}
+                        className={`cursor-pointer ${!client.assignedStaff ? "text-amber-700 hover:underline" : "text-slate-800 hover:text-brand-700"}`}
+                        title={client.assignedStaff ? "Change assigned staff" : "Assign staff"}
+                      >
+                        {item.value}
+                      </button>
+                    </dd>
+                  ) : (
+                    <dd className="text-sm text-slate-800 break-words font-medium">{item.value}</dd>
+                  )}
                 </div>
               </div>
             ))}
@@ -432,6 +447,13 @@ export default function ClientDetailsPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
         loading={deleteLoading}
+      />
+
+      <AssignStaffModal
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        client={client}
+        onAssigned={load}
       />
     </div>
   );

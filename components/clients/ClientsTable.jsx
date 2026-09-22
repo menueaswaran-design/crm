@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Pencil, Trash2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
 
 function fmtDate(d) {
@@ -12,8 +13,9 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-export default function ClientsTable({ clients, onEdit, onDelete }) {
+export default function ClientsTable({ clients, onEdit, onDelete, onAssigned }) {
   const [whatsappClient, setWhatsappClient] = useState(null);
+  const [assignClient, setAssignClient] = useState(null);
 
   const handleWhatsApp = (c) => {
     setWhatsappClient(c);
@@ -61,7 +63,14 @@ export default function ClientsTable({ clients, onEdit, onDelete }) {
                 {c.assignedStaff ? (
                   <span className="text-slate-700">{c.assignedStaff.name}</span>
                 ) : (
-                  <span className="font-medium text-amber-700">Unassigned</span>
+                  <button
+                    type="button"
+                    onClick={() => setAssignClient(c)}
+                    className="font-medium text-amber-700 hover:underline cursor-pointer"
+                    title="Assign staff"
+                  >
+                    Unassigned
+                  </button>
                 )}
               </td>
               <td className="px-4 py-3 text-slate-500 text-xs">{fmtDate(c.createdAt)}</td>
@@ -113,6 +122,13 @@ export default function ClientsTable({ clients, onEdit, onDelete }) {
       initialMessage={whatsappClient ? generateClientMessage({ client: whatsappClient }) : ""}
       clientId={whatsappClient?._id}
       messageType="CLIENT_MESSAGE"
+    />
+
+    <AssignStaffModal
+      open={!!assignClient}
+      onClose={() => setAssignClient(null)}
+      client={assignClient}
+      onAssigned={onAssigned}
     />
     </>
   );

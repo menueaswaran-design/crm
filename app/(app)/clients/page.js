@@ -284,13 +284,13 @@ function ClientsPage() {
           }
         />
       ) : view === "table" ? (
-        <ClientsTable clients={clients} onEdit={setEditing} onDelete={setDeleting} />
+        <ClientsTable clients={clients} onEdit={setEditing} onDelete={setDeleting} onAssigned={load} />
       ) : view === "list" ? (
-        <ClientsList clients={clients} onEdit={setEditing} onDelete={setDeleting} />
+        <ClientsList clients={clients} onEdit={setEditing} onDelete={setDeleting} onAssigned={load} />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {clients.map((c) => (
-            <ClientCard key={c._id} client={c} onEdit={setEditing} onDelete={setDeleting} />
+            <ClientCard key={c._id} client={c} onEdit={setEditing} onDelete={setDeleting} onAssigned={load} />
           ))}
         </div>
       )}

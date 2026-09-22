@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Pencil, Trash2, ArrowUpRight, MessageSquare } from "lucide-react";
 import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
+import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
 
-export default function ClientsList({ clients, onEdit, onDelete }) {
+export default function ClientsList({ clients, onEdit, onDelete, onAssigned }) {
   const [whatsappClient, setWhatsappClient] = useState(null);
+  const [assignClient, setAssignClient] = useState(null);
 
   const handleWhatsApp = (c) => {
     setWhatsappClient(c);
@@ -34,7 +36,18 @@ export default function ClientsList({ clients, onEdit, onDelete }) {
             <span className="hidden lg:inline text-xs text-slate-400 truncate">{c.email || ""}</span>
           </div>
           <div className="hidden sm:block w-32 text-right text-xs text-slate-500 truncate">
-            {c.assignedStaff ? c.assignedStaff.name : <span className="font-medium text-amber-700">Unassigned</span>}
+            {c.assignedStaff ? (
+              c.assignedStaff.name
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAssignClient(c)}
+                className="font-medium text-amber-700 hover:underline cursor-pointer"
+                title="Assign staff"
+              >
+                Unassigned
+              </button>
+            )}
           </div>
           <div className="flex gap-0.5 shrink-0">
             <Link
@@ -80,6 +93,13 @@ export default function ClientsList({ clients, onEdit, onDelete }) {
       initialMessage={whatsappClient ? generateClientMessage({ client: whatsappClient }) : ""}
       clientId={whatsappClient?._id}
       messageType="CLIENT_MESSAGE"
+    />
+
+    <AssignStaffModal
+      open={!!assignClient}
+      onClose={() => setAssignClient(null)}
+      client={assignClient}
+      onAssigned={onAssigned}
     />
     </>
   );
