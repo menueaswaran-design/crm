@@ -5,6 +5,7 @@ import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { applyComplianceCalendar } from "@/lib/complianceCalendar";
 import { nextClientCode } from "@/lib/counter";
 import { escapeRegex } from "@/lib/utils";
 
@@ -125,6 +126,8 @@ export async function POST(request) {
         throw error;
       }
     }
+
+    await applyComplianceCalendar(client);
 
     await logActivity({
       userId: user._id,

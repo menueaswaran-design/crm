@@ -42,14 +42,11 @@ export async function DELETE(request, { params }) {
       return fail("You cannot delete your own account.", 400);
     }
 
-    const updated = await User.findOneAndUpdate(
-      { _id: id, companyId: user.companyId },
-      { isActive: false },
-      { returnDocument: "after" }
-    );
-    if (!updated) return fail("User not found.", 404);
+    const target = await User.findOne({ _id: id, companyId: user.companyId });
+    if (!target) return fail("User not found.", 404);
 
-    return ok(updated, "User deactivated successfully.");
+    await User.deleteOne({ _id: id });
+    return ok(null, "User deleted successfully.");
   } catch (error) {
     return handleError(error);
   }

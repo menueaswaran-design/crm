@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
-import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power, Download, LogIn, Users } from "lucide-react";
+import { Plus, UserPlus, Search, ShieldCheck, Pencil, Power, Trash2, Download, LogIn, Users } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { apiFetch, patchData, deleteData } from "@/lib/client";
 import { downloadCSV, downloadExcel } from "@/lib/export";
@@ -31,7 +31,9 @@ function StaffPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deactivating, setDeactivating] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [exporting, setExporting] = useState(null);
 
   const load = useCallback(async () => {
@@ -61,15 +63,23 @@ function StaffPage() {
     if (!deactivating) return;
     setActionLoading(true);
     try {
-      if (deactivating.isActive) {
-        await deleteData(`/api/users/${deactivating._id}`);
-      } else {
-        await patchData(`/api/users/${deactivating._id}`, { isActive: true });
-      }
+      await patchData(`/api/users/${deactivating._id}`, { isActive: !deactivating.isActive });
       setDeactivating(null);
       load();
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setDeleteLoading(true);
+    try {
+      await deleteData(`/api/users/${deleting._id}`);
+      setDeleting(null);
+      load();
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -255,6 +265,16 @@ function StaffPage() {
                                 <Power size={15} />
                               </button>
                             )}
+                            {!isSelf && (
+                              <button
+                                onClick={() => setDeleting(u)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                aria-label="Delete staff"
+                                title="Delete staff"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            )}
                           </div>
                         </td>
                       )}
@@ -287,6 +307,17 @@ function StaffPage() {
         onConfirm={confirmDeactivate}
         onCancel={() => setDeactivating(null)}
         loading={actionLoading}
+      />
+
+      <ConfirmDialog
+        open={!!deleting}
+        title="Delete Staff"
+        message={`Delete ${deleting?.name} permanently? They will immediately lose access and their account will be removed. This cannot be undone.`}
+        danger
+        confirmLabel="Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+        loading={deleteLoading}
       />
       </>
       )}

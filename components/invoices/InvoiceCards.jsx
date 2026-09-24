@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Download, Trash2, Banknote, ReceiptText } from "lucide-react";
+import { Eye, Download, Pencil, Trash2, Banknote, ReceiptText } from "lucide-react";
 import { StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
@@ -14,7 +14,7 @@ const STATUS_TILE = {
   OVERDUE: "bg-rose-500",
 };
 
-export default function InvoiceCards({ invoices, onPayment, onDelete }) {
+export default function InvoiceCards({ invoices, onPayment, onEdit, onDelete }) {
   return (
     <div className="flex flex-col gap-3">
       {invoices.map((inv) => {
@@ -81,6 +81,14 @@ export default function InvoiceCards({ invoices, onPayment, onDelete }) {
                   />
                 )}
                 <div className="ml-auto flex items-center gap-1">
+                  <button
+                    onClick={() => onEdit?.(inv)}
+                    className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                    aria-label="Edit invoice"
+                    title="Edit invoice"
+                  >
+                    <Pencil size={15} />
+                  </button>
                   <button
                     onClick={() => window.open(`/api/invoices/${inv._id}/view`, "_blank")}
                     className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
@@ -171,6 +179,14 @@ export default function InvoiceCards({ invoices, onPayment, onDelete }) {
                     className="hidden md:inline-flex"
                   />
                 )}
+                <button
+                  onClick={() => onEdit?.(inv)}
+                  className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                  aria-label="Edit invoice"
+                  title="Edit invoice"
+                >
+                  <Pencil size={15} />
+                </button>
                 <button
                   onClick={() => window.open(`/api/invoices/${inv._id}/view`, "_blank")}
                   className="shrink-0 p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"

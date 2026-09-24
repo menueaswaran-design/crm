@@ -1,11 +1,13 @@
 import * as XLSX from "xlsx";
 import dbConnect from "@/lib/mongodb";
 import Client from "@/models/Client";
+import Compliance from "@/models/Compliance";
 import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { buildComplianceCalendar } from "@/lib/complianceCalendar";
 import { nextClientCode } from "@/lib/counter";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -349,6 +351,18 @@ export async function POST(request) {
         insertedCount: err.insertedCount,
         writeErrorsCount: err.writeErrors?.length || err.result?.writeErrors?.length || 0,
       }, null, 2));
+    }
+
+    const complianceDocs = [];
+    for (const c of created) {
+      complianceDocs.push(...buildComplianceCalendar(c));
+    }
+    if (complianceDocs.length) {
+      try {
+        await Compliance.insertMany(complianceDocs, { ordered: false });
+      } catch (calErr) {
+        if (calErr?.code !== 11000) console.error("IMPORT CALENDAR ERROR:", calErr.message);
+      }
     }
 
     const insertFailedCount = docsToCreate.length - created.length;

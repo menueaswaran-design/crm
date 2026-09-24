@@ -42,6 +42,7 @@ export async function PATCH(request, { params }) {
       invoice.gstRate = calc.gstRate;
       invoice.gstAmount = calc.gstAmount;
       invoice.totalAmount = calc.totalAmount;
+      invoice.outstandingAmount = Math.max(0, invoice.totalAmount - (invoice.paidAmount || 0));
     }
 
     const editable = ["invoiceDate", "dueDate", "notes", "status"];

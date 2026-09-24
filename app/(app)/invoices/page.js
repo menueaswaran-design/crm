@@ -194,7 +194,7 @@ export default function InvoicesPage() {
           action={<Button onClick={() => setFormOpen(true)}><Plus size={16} /> Create Invoice</Button>}
         />
       ) : (
-        <InvoiceCards invoices={invoices} onPayment={setPaying} onDelete={setDeleting} />
+        <InvoiceCards invoices={invoices} onPayment={setPaying} onEdit={setEditing} onDelete={setDeleting} />
       )}
 
       <Pagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
