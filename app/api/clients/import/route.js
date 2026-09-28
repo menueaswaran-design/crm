@@ -268,7 +268,7 @@ export async function POST(request) {
           address,
           fatherName: fatherName || undefined,
           extraFields: Object.keys(extraFields).length > 0 ? extraFields : undefined,
-          assignedStaff: assignedStaff || null,
+          assignedStaff: assignedStaff ? [assignedStaff] : [],
           status,
           companyId: user.companyId,
           createdBy: user._id,

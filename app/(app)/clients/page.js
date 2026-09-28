@@ -20,6 +20,7 @@ import Button from "@/components/common/Button";
 import ErrorBanner from "@/components/common/ErrorBanner";
 import Loading from "@/components/common/Loading";
 import { CLIENT_CATEGORIES, getErrorMessage } from "@/lib/utils";
+import { assignedStaffNames } from "@/lib/clientAssignment";
 
 function ClientsPage() {
   const searchParams = useSearchParams();
@@ -127,7 +128,7 @@ function ClientsPage() {
         GSTIN: c.gstin || "",
         Email: c.email || "",
         Phone: c.phone || "",
-        Staff: c.assignedStaff?.name || "",
+        Staff: assignedStaffNames(c.assignedStaff, ""),
         Status: c.status || "",
         Added: formatExportDate(c.createdAt),
       }));

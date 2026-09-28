@@ -7,6 +7,7 @@ import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
+import { assignedStaffIds, assignedStaffNames } from "@/lib/clientAssignment";
 
 export default function ClientsList({ clients, onEdit, onDelete, onAssigned }) {
   const [whatsappClient, setWhatsappClient] = useState(null);
@@ -36,8 +37,10 @@ export default function ClientsList({ clients, onEdit, onDelete, onAssigned }) {
             <span className="hidden lg:inline text-xs text-slate-400 truncate">{c.email || ""}</span>
           </div>
           <div className="hidden sm:block w-32 text-right text-xs text-slate-500 truncate">
-            {c.assignedStaff ? (
-              c.assignedStaff.name
+            {assignedStaffIds(c.assignedStaff).length ? (
+              <span title={assignedStaffNames(c.assignedStaff)}>
+                {assignedStaffNames(c.assignedStaff)}
+              </span>
             ) : (
               <button
                 type="button"

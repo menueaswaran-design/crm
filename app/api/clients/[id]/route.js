@@ -10,6 +10,7 @@ import User from "@/models/User";
 import { ok, fail, handleError } from "@/lib/api";
 import { requirePermission, requireAdmin, companyScope } from "@/lib/auth";
 import { logActivity } from "@/lib/activity";
+import { isAssignedToUser } from "@/lib/clientAssignment";
 
 const RELATED_LIMIT = 20;
 
@@ -25,7 +26,7 @@ export async function GET(request, { params }) {
       .lean();
 
     if (!client) return fail("Client not found.", 404);
-    if (user.role === "staff" && String(client.assignedStaff?._id || client.assignedStaff) !== String(user._id)) {
+    if (user.role === "staff" && !isAssignedToUser(client, user)) {
       return fail("You do not have access to this client.", 403);
     }
 
@@ -44,7 +45,11 @@ export async function GET(request, { params }) {
       Compliance.countDocuments({ clientId: id, companyId: user.companyId }),
       Task.find({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }).sort({ createdAt: -1 }).limit(RELATED_LIMIT).lean(),
       Task.countDocuments({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }),
-      Document.find({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }).sort({ uploadedAt: -1 }).limit(RELATED_LIMIT).lean(),
+      Document.find({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } })
+        .populate("uploadedBy", "name")
+        .sort({ uploadedAt: -1 })
+        .limit(RELATED_LIMIT)
+        .lean(),
       Document.countDocuments({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }),
       Invoice.find({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }).sort({ invoiceDate: -1 }).limit(RELATED_LIMIT).lean(),
       Invoice.countDocuments({ clientId: id, companyId: user.companyId, isDeleted: { $ne: true } }),
@@ -93,18 +98,34 @@ export async function PATCH(request, { params }) {
 
     const fields = [
       "name", "category", "aadhaar", "cin", "email", "phone", "address",
-      "fatherName", "assignedStaff", "status",
+      "fatherName", "status",
     ];
     for (const f of fields) {
       if (body[f] !== undefined) client[f] = body[f];
     }
-    if (body.assignedStaff === "" || body.assignedStaff === null) {
-      client.assignedStaff = null;
-    }
-    if (body.assignedStaff) {
-      const staff = await User.findOne({ _id: body.assignedStaff, isActive: true, ...scope }).select("_id").lean();
-      if (!staff) return fail("Assigned staff member not found in your company.", 404);
-      client.assignedStaff = staff._id;
+    if (body.assignedStaff !== undefined) {
+      const requested = Array.isArray(body.assignedStaff)
+        ? body.assignedStaff.filter(Boolean)
+        : body.assignedStaff
+          ? [body.assignedStaff]
+          : [];
+      const unique = [...new Set(requested.map(String))];
+      if (!unique.length) {
+        client.assignedStaff = [];
+      } else {
+        const staff = await User.find({
+          _id: { $in: unique },
+          isActive: true,
+          role: "staff",
+          ...scope,
+        })
+          .select("_id")
+          .lean();
+        if (staff.length !== unique.length) {
+          return fail("One or more assigned staff members were not found in your company.", 404);
+        }
+        client.assignedStaff = staff.map((s) => s._id);
+      }
     }
     client.pan = pan;
     client.gstin = gstin;

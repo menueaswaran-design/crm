@@ -4,6 +4,7 @@ import Client from "@/models/Client";
 import { fail } from "@/lib/api";
 import { requirePermission } from "@/lib/auth";
 import { getDocumentContent } from "@/lib/documents";
+import { isAssignedToUser } from "@/lib/clientAssignment";
 
 export async function GET(request, { params }) {
   try {
@@ -16,7 +17,7 @@ export async function GET(request, { params }) {
 
     if (user.role === "staff") {
       const client = await Client.findById(doc.clientId).lean();
-      if (client && String(client.assignedStaff) !== String(user._id)) {
+      if (client && !isAssignedToUser(client, user)) {
         return fail("You do not have access to this document.", 403);
       }
     }

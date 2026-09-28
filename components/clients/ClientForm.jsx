@@ -9,6 +9,7 @@ import Button from "@/components/common/Button";
 import { Input, Select, Textarea } from "@/components/common/Field";
 import { postData, patchData, apiFetch } from "@/lib/client";
 import { CLIENT_CATEGORIES } from "@/lib/utils";
+import { assignedStaffIds } from "@/lib/clientAssignment";
 
 const schema = z.object({
   name: z.string().min(2, "Client name must be at least 2 characters."),
@@ -25,7 +26,7 @@ const schema = z.object({
   phone: z.string().regex(/^(\+91[\s-]?)?[0]?[6-9]\d{9}$/, "Invalid Indian phone number."),
   address: z.string().min(1, "Address is required."),
   fatherName: z.string().optional().or(z.literal("")),
-  assignedStaff: z.string().optional().or(z.literal("")),
+  assignedStaff: z.array(z.string()).default([]),
 });
 
 export default function ClientForm({ open, onClose, client, onSaved }) {
@@ -38,6 +39,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema) });
 
@@ -55,6 +57,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
   }, [open, client]);
 
   const nameValue = client ? client.name : watch("name");
+  const selectedStaff = watch("assignedStaff") || [];
   const codePreview = client
     ? client.clientCode
     : `${(nameValue || "")
@@ -80,7 +83,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
               phone: client.phone,
               address: client.address,
               fatherName: client.fatherName || "",
-              assignedStaff: client.assignedStaff?._id || client.assignedStaff || "",
+              assignedStaff: assignedStaffIds(client.assignedStaff),
             }
           : {
               name: "",
@@ -93,7 +96,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
               phone: "",
               address: "",
               fatherName: "",
-              assignedStaff: "",
+              assignedStaff: [],
             }
       );
     }
@@ -115,7 +118,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
     try {
       const payload = {
         ...values,
-        assignedStaff: values.assignedStaff || null,
+        assignedStaff: values.assignedStaff || [],
       };
       if (client) {
         await patchData(`/api/clients/${client._id}`, payload);
@@ -175,14 +178,43 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
           <Input label="Email" type="email" required placeholder="client@company.com" error={errors.email?.message} {...register("email")} />
           <Input label="Phone" required placeholder="+91 98765 43210" error={errors.phone?.message} {...register("phone")} />
           <Input label="Father Name" placeholder="Father's name" error={errors.fatherName?.message} {...register("fatherName")} />
-          <Select label="Assigned Staff" error={errors.assignedStaff?.message} {...register("assignedStaff")}>
-            <option value="">Unassigned</option>
-            {staff.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.name}
-              </option>
-            ))}
-          </Select>
+          <div className="sm:col-span-2">
+            <span className="label-base">Assigned Staff</span>
+            {staff.length === 0 ? (
+              <p className="text-xs text-slate-400">No staff members yet. Add them in the Staff section.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {staff.map((u) => {
+                  const on = selectedStaff.includes(u._id);
+                  return (
+                    <button
+                      key={u._id}
+                      type="button"
+                      onClick={() =>
+                        setValue(
+                          "assignedStaff",
+                          on
+                            ? selectedStaff.filter((id) => id !== u._id)
+                            : [...selectedStaff, u._id],
+                          { shouldDirty: true, shouldValidate: true }
+                        )
+                      }
+                      className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                        on
+                          ? "border-brand-300 bg-brand-50 text-brand-700"
+                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      {u.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <p className="mt-1 text-xs text-slate-400">
+              A client can be shared by multiple staff members.
+            </p>
+          </div>
           <div className="sm:col-span-2">
             <Textarea label="Address" required placeholder="Full address" error={errors.address?.message} {...register("address")} />
           </div>

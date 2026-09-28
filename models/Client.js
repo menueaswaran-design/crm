@@ -19,7 +19,7 @@ const clientSchema = new mongoose.Schema(
     address: { type: String, trim: true },
     fatherName: { type: String, trim: true },
     extraFields: { type: Map, of: String, default: {} },
-    assignedStaff: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    assignedStaff: { type: [mongoose.Schema.Types.ObjectId], ref: "User", default: [] },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     isDeleted: { type: Boolean, default: false },

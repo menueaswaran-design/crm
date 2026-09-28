@@ -7,6 +7,7 @@ import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
+import { assignedStaffIds, assignedStaffNames } from "@/lib/clientAssignment";
 
 function initials(name) {
   return (name || "")
@@ -19,7 +20,7 @@ function initials(name) {
 }
 
 export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
-  const unassigned = !client.assignedStaff;
+  const unassigned = assignedStaffIds(client.assignedStaff).length === 0;
   const [whatsappOpen, setWhatsappOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
 
@@ -110,7 +111,7 @@ export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
               Unassigned
             </button>
           ) : (
-            <>Staff: <span className="font-medium text-slate-700">{client.assignedStaff?.name}</span></>
+            <>Staff: <span className="font-medium text-slate-700">{assignedStaffNames(client.assignedStaff)}</span></>
           )}
         </p>
         <Link

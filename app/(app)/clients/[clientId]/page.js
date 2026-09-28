@@ -20,15 +20,27 @@ import {
   Hourglass,
   CheckSquare,
   Pencil,
-  Plus,
+  Upload,
+  Download,
+  Eye,
+  File,
+  FolderOpen,
 } from "lucide-react";
 import { apiFetch, deleteData } from "@/lib/client";
-import { maskAadhaar, formatDate, daysRemaining, getErrorMessage } from "@/lib/utils";
+import {
+  maskAadhaar,
+  formatDate,
+  formatBytes,
+  daysRemaining,
+  getErrorMessage,
+} from "@/lib/utils";
 import { generateClientMessage } from "@/lib/whatsappMessages";
+import { assignedStaffNames, assignedStaffIds } from "@/lib/clientAssignment";
 import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
+import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
@@ -44,6 +56,16 @@ const CATEGORY_GRADIENTS = {
   Other: "from-slate-400 to-slate-600",
 };
 
+const FILE_ICONS = {
+  pdf: { cls: "bg-rose-50 text-rose-600", icon: FileText },
+  xlsx: { cls: "bg-emerald-50 text-emerald-600", icon: File },
+  xls: { cls: "bg-emerald-50 text-emerald-600", icon: File },
+  docx: { cls: "bg-sky-50 text-sky-600", icon: FileText },
+  jpg: { cls: "bg-purple-50 text-purple-600", icon: File },
+  jpeg: { cls: "bg-purple-50 text-purple-600", icon: File },
+  png: { cls: "bg-purple-50 text-purple-600", icon: File },
+};
+
 export default function ClientDetailsPage() {
   const { clientId } = useParams();
   const router = useRouter();
@@ -53,6 +75,10 @@ export default function ClientDetailsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [docCategory, setDocCategory] = useState("");
+  const [deleteDoc, setDeleteDoc] = useState(null);
+  const [deleteDocLoading, setDeleteDocLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -105,6 +131,11 @@ export default function ClientDetailsPage() {
     .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0] || null;
   const nextDays = nextDueRecord ? daysRemaining(nextDueRecord.dueDate) : null;
 
+  const docCategories = [...new Set(documents.map((d) => d.category).filter(Boolean))];
+  const visibleDocuments = docCategory
+    ? documents.filter((d) => d.category === docCategory)
+    : documents;
+
   const infoItems = [
     { icon: IdCard, label: "Client ID", value: client.clientCode || "—" },
     { icon: IdCard, label: "PAN", value: client.pan || "—" },
@@ -115,8 +146,10 @@ export default function ClientDetailsPage() {
     { icon: Phone, label: "Phone", value: client.phone || "—" },
     { icon: MapPin, label: "Address", value: client.address || "—" },
     { icon: User, label: "Father Name", value: client.fatherName || "—" },
-    { icon: User, label: "Assigned Staff", value: client.assignedStaff?.name || "Unassigned", assignible: true },
+    { icon: User, label: "Assigned Staff", value: assignedStaffNames(client.assignedStaff), assignible: true },
   ];
+
+  const hasStaff = assignedStaffIds(client.assignedStaff).length > 0;
 
   const extraFields = client.extraFields && typeof client.extraFields === "object"
     ? Object.entries(client.extraFields)
@@ -125,7 +158,7 @@ export default function ClientDetailsPage() {
   const statTiles = [
     { label: "Compliance", value: counts.compliance ?? compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
     { label: "Tasks", value: counts.tasks ?? tasks.length, icon: CheckSquare, cls: "bg-sky-50 text-sky-600", href: "/tasks" },
-    { label: "Documents", value: counts.documents ?? documents.length, icon: FileText, cls: "bg-brand-50 text-brand-600", href: "/documents" },
+    { label: "Documents", value: counts.documents ?? documents.length, icon: FileText, cls: "bg-brand-50 text-brand-600", href: `/documents?clientId=${clientId}`, anchor: "documents" },
     { label: "Invoices", value: counts.invoices ?? invoices.length, icon: Receipt, cls: "bg-emerald-50 text-emerald-600", href: "/invoices" },
   ];
 
@@ -136,6 +169,17 @@ export default function ClientDetailsPage() {
       router.push("/clients");
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const confirmDeleteDocument = async () => {
+    setDeleteDocLoading(true);
+    try {
+      await deleteData(`/api/documents/${deleteDoc._id}`);
+      setDeleteDoc(null);
+      load();
+    } finally {
+      setDeleteDocLoading(false);
     }
   };
 
@@ -182,21 +226,30 @@ export default function ClientDetailsPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4">
-              {statTiles.map((t) => (
-                <Link
-                  key={t.label}
-                  href={t.href}
-                  className="flex items-center gap-2.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 card-hover min-w-[8.5rem]"
-                >
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${t.cls}`}>
-                    <t.icon size={16} />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-slate-900 leading-none">{t.value}</p>
-                    <p className="text-[10px] uppercase tracking-wider text-slate-400 mt-1">{t.label}</p>
-                  </div>
-                </Link>
-              ))}
+              {statTiles.map((t) => {
+                const tileClass =
+                  "flex items-center gap-2.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 card-hover min-w-[8.5rem]";
+                const inner = (
+                  <>
+                    <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${t.cls}`}>
+                      <t.icon size={16} />
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-slate-900 leading-none">{t.value}</p>
+                      <p className="text-[10px] uppercase tracking-wider text-slate-400 mt-1">{t.label}</p>
+                    </div>
+                  </>
+                );
+                return t.anchor ? (
+                  <a key={t.label} href={`#${t.anchor}`} className={tileClass}>
+                    {inner}
+                  </a>
+                ) : (
+                  <Link key={t.label} href={t.href} className={tileClass}>
+                    {inner}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -217,8 +270,8 @@ export default function ClientDetailsPage() {
                       <button
                         type="button"
                         onClick={() => setAssignOpen(true)}
-                        className={`cursor-pointer ${!client.assignedStaff ? "text-amber-700 hover:underline" : "text-slate-800 hover:text-brand-700"}`}
-                        title={client.assignedStaff ? "Change assigned staff" : "Assign staff"}
+                        className={`cursor-pointer ${!hasStaff ? "text-amber-700 hover:underline" : "text-slate-800 hover:text-brand-700"}`}
+                        title={hasStaff ? "Change assigned staff" : "Assign staff"}
                       >
                         {item.value}
                       </button>
@@ -338,54 +391,173 @@ export default function ClientDetailsPage() {
             )}
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
                 <h2 className="font-semibold text-slate-900">Tasks</h2>
-                <Link href="/tasks" className="text-sm font-medium text-brand-700 hover:text-brand-800">
+                <p className="text-xs text-slate-400 mt-0.5">Recent work items</p>
+              </div>
+              <Link href="/tasks" className="text-sm font-medium text-brand-700 hover:text-brand-800">
+                View all
+              </Link>
+            </div>
+            {tasks.length === 0 ? (
+              <EmptyState compact title="No tasks" description="Tasks linked to this client will appear here." />
+            ) : (
+              <ul className="divide-y divide-slate-50">
+                {tasks.slice(0, 5).map((t) => (
+                  <li key={t._id} className="py-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CheckSquare size={14} className="text-slate-300 shrink-0" />
+                      <p className="text-sm text-slate-700 truncate">{t.title}</p>
+                    </div>
+                    <StatusBadge status={t.status} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <section id="documents" className="card p-6 scroll-mt-24">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="font-semibold text-slate-900">Documents</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {counts.documents ?? documents.length} file{(counts.documents ?? documents.length) === 1 ? "" : "s"} on record
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Link
+                  href={`/documents?clientId=${clientId}`}
+                  className="text-sm font-medium text-brand-700 hover:text-brand-800"
+                >
                   View all
                 </Link>
+                <Button size="sm" onClick={() => setUploadOpen(true)}>
+                  <Upload size={14} /> Upload files
+                </Button>
               </div>
-              {tasks.length === 0 ? (
-                <EmptyState compact title="No tasks" description="Tasks linked to this client will appear here." />
-              ) : (
-                <ul className="space-y-2.5">
-                  {tasks.slice(0, 5).map((t) => (
-                    <li key={t._id} className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <CheckSquare size={14} className="text-slate-300 shrink-0" />
-                        <p className="text-sm text-slate-700 truncate">{t.title}</p>
-                      </div>
-                      <StatusBadge status={t.status} />
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
 
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-slate-900">Documents</h2>
-                <Link href="/documents" className="text-sm font-medium text-brand-700 hover:text-brand-800">
-                  View all
-                </Link>
+            {docCategories.length > 1 && (
+              <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDocCategory("")}
+                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                    docCategory === ""
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  All
+                  <span className={`ml-1.5 ${docCategory === "" ? "text-slate-300" : "text-slate-400"}`}>
+                    {documents.length}
+                  </span>
+                </button>
+                {docCategories.map((c) => {
+                  const count = documents.filter((d) => d.category === c).length;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setDocCategory(c)}
+                      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                        docCategory === c
+                          ? "bg-slate-900 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                    >
+                      {c}
+                      <span className={`ml-1.5 ${docCategory === c ? "text-slate-300" : "text-slate-400"}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {documents.length === 0 ? (
-                <EmptyState compact title="No documents" description="Uploaded files for this client will appear here." />
-              ) : (
-                <ul className="space-y-2.5">
-                  {documents.slice(0, 5).map((d) => (
-                    <li key={d._id} className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center shrink-0">
-                        <FileText size={14} />
+            )}
+
+            {visibleDocuments.length === 0 ? (
+              <EmptyState
+                compact
+                title={docCategory ? `No ${docCategory} documents` : "No documents"}
+                description={
+                  docCategory
+                    ? "Try another category or upload a new file."
+                    : "Upload PAN, GST returns, bank statements or any client file."
+                }
+                action={
+                  !docCategory ? (
+                    <Button size="sm" onClick={() => setUploadOpen(true)}>
+                      <Upload size={14} /> Upload files
+                    </Button>
+                  ) : null
+                }
+              />
+            ) : (
+              <ul className="divide-y divide-slate-50">
+                {visibleDocuments.map((d) => {
+                  const meta = FILE_ICONS[(d.format || "").toLowerCase()] || {
+                    cls: "bg-slate-100 text-slate-600",
+                    icon: File,
+                  };
+                  const Icon = meta.icon;
+                  return (
+                    <li key={d._id} className="py-3 flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}>
+                        <Icon size={18} />
                       </div>
-                      <p className="text-sm text-slate-700 truncate">{d.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-slate-900 break-all leading-snug">{d.name}</p>
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                            <FolderOpen size={11} /> {d.category}
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-brand-700">
+                            {d.format || "file"}
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            {formatBytes(d.size)} · {formatDate(d.uploadedAt || d.createdAt)}
+                            {d.uploadedBy?.name ? ` · ${d.uploadedBy.name}` : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/api/documents/${d._id}/view`, "_blank")}
+                          className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                          aria-label={`View ${d.name}`}
+                          title="View"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => window.open(`/api/documents/${d._id}/download`, "_blank")}
+                          className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                          aria-label={`Download ${d.name}`}
+                          title="Download"
+                        >
+                          <Download size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeleteDoc(d)}
+                          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          aria-label={`Delete ${d.name}`}
+                          title="Delete"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
@@ -454,6 +626,22 @@ export default function ClientDetailsPage() {
         onClose={() => setAssignOpen(false)}
         client={client}
         onAssigned={load}
+      />
+
+      <UploadDocumentModal
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        onUploaded={load}
+        clientId={clientId}
+      />
+
+      <ConfirmDialog
+        open={!!deleteDoc}
+        title="Delete Document"
+        message={`Are you sure you want to delete "${deleteDoc?.name}"? This cannot be undone.`}
+        onConfirm={confirmDeleteDocument}
+        onCancel={() => setDeleteDoc(null)}
+        loading={deleteDocLoading}
       />
     </div>
   );

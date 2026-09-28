@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Upload, Search, Download } from "lucide-react";
 import { getList, deleteData, buildQuery } from "@/lib/client";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -8,6 +9,7 @@ import { downloadCSV, downloadExcel, fetchAllList } from "@/lib/export";
 import { formatBytes, formatDate, getErrorMessage, DOCUMENT_CATEGORIES } from "@/lib/utils";
 import DocumentCard from "@/components/documents/DocumentCard";
 import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
+import ClientSearchPicker from "@/components/clients/ClientSearchPicker";
 import Pagination from "@/components/common/Pagination";
 import EmptyState from "@/components/common/EmptyState";
 import { SkeletonCards } from "@/components/common/Loading";
@@ -16,6 +18,15 @@ import ConfirmDialog from "@/components/common/ConfirmDialog";
 import ErrorBanner from "@/components/common/ErrorBanner";
 
 export default function DocumentsPage() {
+  return (
+    <Suspense fallback={<SkeletonCards count={6} />}>
+      <DocumentsContent />
+    </Suspense>
+  );
+}
+
+function DocumentsContent() {
+  const searchParams = useSearchParams();
   const [docs, setDocs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,6 +35,7 @@ export default function DocumentsPage() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [clientId, setClientId] = useState(() => searchParams.get("clientId") || "");
   const debouncedSearch = useDebounce(search, 400);
 
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -36,7 +48,7 @@ export default function DocumentsPage() {
     setError("");
     try {
       const { data, pagination } = await getList(
-        `/api/documents${buildQuery({ search: debouncedSearch, category, page, limit: 12 })}`
+        `/api/documents${buildQuery({ search: debouncedSearch, category, clientId, page, limit: 12 })}`
       );
       setDocs(data);
       setTotal(pagination.total || 0);
@@ -46,7 +58,7 @@ export default function DocumentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [debouncedSearch, category, page]);
+  }, [debouncedSearch, category, clientId, page]);
 
   useEffect(() => {
     load();
@@ -70,6 +82,7 @@ export default function DocumentsPage() {
       const all = await fetchAllList("/api/documents", {
         search: debouncedSearch,
         category,
+        clientId,
       });
       if (format === "csv") {
         downloadCSV({
@@ -149,6 +162,13 @@ export default function DocumentsPage() {
             </option>
           ))}
         </select>
+        <div className="w-full sm:w-auto sm:min-w-64">
+          <ClientSearchPicker
+            label=""
+            value={clientId}
+            onChange={(v) => { setClientId(v); setPage(1); }}
+          />
+        </div>
         <p className="text-sm text-slate-500 sm:ml-auto">{total} files</p>
       </div>
 
@@ -179,6 +199,7 @@ export default function DocumentsPage() {
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onUploaded={load}
+        clientId={clientId}
       />
 
       <ConfirmDialog

@@ -8,10 +8,7 @@ import { logActivity } from "@/lib/activity";
 import { applyComplianceCalendar } from "@/lib/complianceCalendar";
 import { nextClientCode } from "@/lib/counter";
 import { escapeRegex } from "@/lib/utils";
-
-const UNASSIGNED_QUERY = {
-  $or: [{ assignedStaff: null }, { assignedStaff: { $exists: false } }],
-};
+import { UNASSIGNED_STAFF_QUERY, HAS_STAFF_QUERY } from "@/lib/clientAssignment";
 
 function isDuplicateKey(error) {
   return error?.code === 11000;
@@ -52,9 +49,9 @@ export async function GET(request) {
     if (user.role === "staff") {
       query.assignedStaff = user._id;
     } else if (assigned === "unassigned") {
-      and.push(UNASSIGNED_QUERY);
+      and.push(UNASSIGNED_STAFF_QUERY);
     } else if (assigned === "assigned") {
-      query.assignedStaff = { $ne: null, $exists: true };
+      and.push(HAS_STAFF_QUERY);
     }
 
     if (and.length) query.$and = and;
@@ -90,13 +87,28 @@ export async function POST(request) {
     const scope = companyScope(user) || {};
     const pan = (body.pan || "").toUpperCase();
     const gstin = (body.gstin || "").toUpperCase();
-    let assignedStaff = body.assignedStaff || null;
 
     // Assigned staff must belong to the same tenant.
-    if (assignedStaff) {
-      const staff = await User.findOne({ _id: assignedStaff, isActive: true, ...scope }).select("_id").lean();
-      if (!staff) return fail("Assigned staff member not found in your company.", 404);
-      assignedStaff = staff._id;
+    const requested = Array.isArray(body.assignedStaff)
+      ? body.assignedStaff.filter(Boolean)
+      : body.assignedStaff
+        ? [body.assignedStaff]
+        : [];
+    const uniqueRequested = [...new Set(requested.map(String))];
+    let assignedStaff = [];
+    if (uniqueRequested.length) {
+      const staff = await User.find({
+        _id: { $in: uniqueRequested },
+        isActive: true,
+        role: "staff",
+        ...scope,
+      })
+        .select("_id")
+        .lean();
+      if (staff.length !== uniqueRequested.length) {
+        return fail("One or more assigned staff members were not found in your company.", 404);
+      }
+      assignedStaff = staff.map((s) => s._id);
     }
 
     const existingPan = await Client.findOne({ pan, isDeleted: { $ne: true }, ...scope }).lean();

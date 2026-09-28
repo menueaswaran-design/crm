@@ -7,6 +7,7 @@ import { CategoryBadge } from "@/components/common/Badge";
 import WhatsAppMessageModal from "@/components/whatsapp/WhatsAppMessageModal";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import { generateClientMessage } from "@/lib/whatsappMessages";
+import { assignedStaffIds, assignedStaffNames } from "@/lib/clientAssignment";
 
 function fmtDate(d) {
   if (!d) return "—";
@@ -60,8 +61,10 @@ export default function ClientsTable({ clients, onEdit, onDelete, onAssigned }) 
                 <p className="text-xs text-slate-400">{c.phone || ""}</p>
               </td>
               <td className="px-4 py-3">
-                {c.assignedStaff ? (
-                  <span className="text-slate-700">{c.assignedStaff.name}</span>
+                {assignedStaffIds(c.assignedStaff).length ? (
+                  <span className="text-slate-700" title={assignedStaffNames(c.assignedStaff)}>
+                    {assignedStaffNames(c.assignedStaff)}
+                  </span>
                 ) : (
                   <button
                     type="button"
