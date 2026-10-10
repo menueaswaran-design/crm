@@ -36,7 +36,7 @@ function LoginLoading() {
 }
 
 const FEATURES = [
-  { icon: FileCheck2, title: "Compliance tracking", desc: "Never miss a filing deadline" },
+  { icon: FileCheck2, title: "Worklist tracking", desc: "Never miss a filing deadline" },
   { icon: TrendingUp, title: "Billing & payments", desc: "GST invoices, partial payments" },
   { icon: ShieldCheck, title: "Secure & role-based", desc: "Admin and staff access controls" },
 ];
@@ -115,7 +115,7 @@ function LoginContent() {
             Run your practice with confidence.
           </h1>
           <p className="mt-4 text-slate-400 text-sm xl:text-base leading-relaxed">
-            Clients, compliance, tasks, documents and billing — all in one secure workspace built
+            Clients, worklist, tasks, documents and billing — all in one secure workspace built
             for chartered accountant firms.
           </p>
 
@@ -154,8 +154,8 @@ function LoginContent() {
 
           <div className="glass border border-white/70 rounded-2xl shadow-popover p-6 sm:p-8 animate-fade-in-up">
             <div className="h-1 w-12 rounded-full bg-linear-to-r from-brand-500 to-sky-400 mb-5" />
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-            <p className="text-sm text-slate-500 mt-1">Sign in to continue to your workspace</p>
+          <h2 className="text-lg font-semibold tracking-[-0.018em] text-slate-900">Welcome back</h2>
+          <p className="page-subtitle mt-1.5">Sign in to continue to your workspace</p>
 
             {demoMode && (
               <div className="mt-5 flex items-start gap-2.5 rounded-xl bg-sky-50 border border-sky-100 p-3 text-xs text-sky-800">
@@ -179,7 +179,7 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
                 <label className="label-base">Role</label>
-                <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100">
+                <div className="grid grid-cols-2 gap-1 rounded-xl border border-hairline bg-canvas-deep p-1">
                   {["admin", "staff"].map((r) => (
                     <button
                       key={r}
@@ -241,7 +241,7 @@ function LoginContent() {
                     type="checkbox"
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="h-4 w-4 rounded border-hairline-strong text-brand-600 focus:ring-brand-500"
                   />
                   Remember me
                 </label>
@@ -257,7 +257,7 @@ function LoginContent() {
             </form>
 
             {demoMode && (
-              <div className="mt-6 pt-5 border-t border-slate-100 space-y-2.5">
+              <div className="mt-6 pt-5 border-t border-hairline space-y-2.5">
                 <p className="text-xs font-medium text-slate-400">Quick demo access</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="secondary" size="md" onClick={() => demoLogin("admin")} disabled={loading}>

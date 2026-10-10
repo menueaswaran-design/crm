@@ -3,23 +3,19 @@ import { Inbox, Search, FileQuestion, AlertCircle } from "lucide-react";
 const VARIANTS = {
   default: {
     Icon: Inbox,
-    iconWrap: "from-slate-100 to-slate-200 text-slate-400",
-    ring: "from-brand-100/40",
+    iconWrap: "bg-slate-50 text-slate-400 border-hairline/80",
   },
   search: {
     Icon: Search,
-    iconWrap: "from-indigo-50 to-indigo-100 text-indigo-500",
-    ring: "from-indigo-100/50",
+    iconWrap: "bg-brand-50/60 text-brand-500 border-brand-100",
   },
   unavailable: {
     Icon: FileQuestion,
-    iconWrap: "from-amber-50 to-amber-100 text-amber-600",
-    ring: "from-amber-100/40",
+    iconWrap: "bg-amber-50/70 text-amber-600 border-amber-100",
   },
   error: {
     Icon: AlertCircle,
-    iconWrap: "from-rose-50 to-rose-100 text-rose-500",
-    ring: "from-rose-100/40",
+    iconWrap: "bg-rose-50/70 text-rose-500 border-rose-100",
   },
 };
 
@@ -37,27 +33,42 @@ export default function EmptyState({
 
   if (compact) {
     return (
-      <div className={`rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center ${className}`}>
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-sm">
-          <Icon size={18} />
+      <div
+        className={`rounded-xl border border-dashed border-hairline-strong bg-canvas/60 px-4 py-8 text-center ${className}`}
+      >
+        <div
+          className={`mx-auto flex h-9 w-9 items-center justify-center rounded-lg border ${preset.iconWrap}`}
+        >
+          <Icon size={16} />
         </div>
-        <p className="mt-3 text-sm font-medium text-slate-700">{title}</p>
-        {description && <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto">{description}</p>}
-        {action && <div className="mt-3">{action}</div>}
+        <p className="mt-2.5 text-[13px] font-medium text-slate-700">{title}</p>
+        {description && (
+          <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-slate-500">
+            {description}
+          </p>
+        )}
+        {action && <div className="mt-3.5">{action}</div>}
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col items-center justify-center py-20 text-center animate-fade-in ${className}`}>
-      <div className="relative">
-        <div className={`h-16 w-16 rounded-2xl bg-gradient-to-br ${preset.iconWrap} flex items-center justify-center`}>
-          <Icon size={28} />
-        </div>
-        <div className={`absolute -inset-1 rounded-2xl bg-gradient-to-br ${preset.ring} to-transparent -z-10`} />
+    <div
+      className={`animate-fade-in flex flex-col items-center justify-center py-16 text-center ${className}`}
+    >
+      <div
+        className={`flex h-12 w-12 items-center justify-center rounded-xl border ${preset.iconWrap}`}
+      >
+        <Icon size={22} />
       </div>
-      <h3 className="mt-5 text-sm font-semibold text-slate-900">{title}</h3>
-      {description && <p className="mt-1.5 text-sm text-slate-500 max-w-md">{description}</p>}
+      <h3 className="mt-4 text-sm font-semibold tracking-[-0.011em] text-slate-900">
+        {title}
+      </h3>
+      {description && (
+        <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-slate-500">
+          {description}
+        </p>
+      )}
       {action && <div className="mt-5">{action}</div>}
     </div>
   );

@@ -9,7 +9,7 @@ import { generatePaymentReminderMessage } from "@/lib/whatsappMessages";
 
 function MobileCard({ inv, onPayment, onDelete }) {
   return (
-    <div className="p-4 border-b border-slate-100 last:border-b-0">
+    <div className="p-4 border-b border-hairline last:border-b-0">
       <div className="flex items-center gap-3 mb-3">
         <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700 shrink-0">
           <FileDown size={14} />
@@ -40,7 +40,7 @@ function MobileCard({ inv, onPayment, onDelete }) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+      <div className="flex items-center gap-2 pt-2 border-t border-hairline">
         {inv.outstandingAmount > 0 && (
           <Button size="sm" variant="secondary" onClick={() => onPayment(inv)}>
             <Banknote size={13} /> Payment
@@ -104,18 +104,18 @@ export default function InvoiceTable({ invoices, onPayment, onDelete }) {
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs text-slate-500 border-b border-slate-100 bg-slate-50/60">
-              <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Invoice #</th>
-              <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Client</th>
-              <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Date</th>
-              <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Due Date</th>
+            <tr className="table-head border-b border-hairline bg-canvas/60">
+              <th className="px-5 py-3.5">Invoice #</th>
+              <th className="px-5 py-3.5">Client</th>
+              <th className="px-5 py-3.5">Date</th>
+              <th className="px-5 py-3.5">Due Date</th>
               <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Amount</th>
               <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Paid</th>
-              <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Status</th>
+              <th className="px-5 py-3.5">Status</th>
               <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-hairline">
             {invoices.map((inv) => (
               <tr key={inv._id} className="hover:bg-brand-50/30 transition-colors">
                 <td className="px-5 py-4">

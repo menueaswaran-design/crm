@@ -202,7 +202,7 @@ export default function ClientForm({ open, onClose, client, onSaved }) {
                       className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
                         on
                           ? "border-brand-300 bg-brand-50 text-brand-700"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                          : "border-hairline bg-white text-slate-600 hover:border-hairline-strong hover:bg-slate-50"
                       }`}
                     >
                       {u.name}

@@ -24,45 +24,51 @@ export default function UserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2.5 rounded-xl hover:bg-slate-100 pl-1.5 pr-2 py-1.5 transition-colors"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2.5 rounded-lg border border-transparent py-1 pl-1.5 pr-2 transition-colors hover:border-hairline hover:bg-slate-50"
       >
-        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-xs font-bold ring-2 ring-white shadow-sm">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white shadow-[0_1px_2px_rgba(79,70,229,0.28)]">
           {initials(user.name)}
         </div>
-        <div className="hidden md:block text-left">
-          <p className="text-[13px] font-semibold text-slate-900 leading-tight">{user.name}</p>
-          <p className="text-[11px] text-slate-400 capitalize leading-tight">{user.role}</p>
+        <div className="hidden text-left md:block">
+          <p className="text-[13px] font-medium leading-tight tracking-[-0.008em] text-slate-900">
+            {user.name}
+          </p>
+          <p className="text-[11px] capitalize leading-tight text-slate-500">{user.role}</p>
         </div>
-        <ChevronDown size={14} className="text-slate-400 hidden md:block" />
+        <ChevronDown size={14} className="hidden text-slate-400 transition-transform md:block" />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-60 bg-white border border-slate-200 rounded-xl shadow-popover py-2 z-50 animate-slide-down">
-          <div className="px-4 py-3 border-b border-slate-100 mb-1">
+        <div
+          role="menu"
+          className="absolute right-0 z-50 mt-2 w-60 animate-slide-down rounded-xl border border-hairline bg-white py-1.5 shadow-popover"
+        >
+          <div className="mb-1 border-b border-hairline px-4 py-3">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white flex items-center justify-center text-xs font-bold">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white">
                 {initials(user.name)}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                <p className="truncate text-[13px] font-semibold text-slate-900">{user.name}</p>
+                <p className="truncate text-xs text-slate-500">{user.email}</p>
               </div>
             </div>
           </div>
-          <div className="px-4 py-2 flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 px-4 py-2 text-xs text-slate-500">
             <ShieldCheck size={14} className="text-emerald-500" />
             Signed in as{" "}
-            <span className="font-semibold capitalize text-slate-700">{user.role}</span>
+            <span className="font-medium capitalize text-slate-700">{user.role}</span>
           </div>
-          <button
-            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <div className="my-1 border-t border-hairline" />
+          <button className="flex w-full items-center gap-2.5 px-4 py-2 text-[13px] text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900">
             <UserIcon size={15} className="text-slate-400" /> Profile
           </button>
-          <div className="my-1 border-t border-slate-100" />
+          <div className="my-1 border-t border-hairline" />
           <button
             onClick={logout}
-            className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+            className="flex w-full items-center gap-2.5 px-4 py-2 text-[13px] text-rose-600 transition-colors hover:bg-rose-50"
           >
             <LogOut size={15} /> Sign out
           </button>

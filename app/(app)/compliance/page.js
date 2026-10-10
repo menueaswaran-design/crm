@@ -114,7 +114,7 @@ function CompliancePage() {
       });
       if (format === "csv") {
         downloadCSV({
-          filename: "compliance",
+          filename: "worklist",
           headers: [
             "Client",
             "Type",
@@ -142,8 +142,8 @@ function CompliancePage() {
         });
       } else {
         downloadExcel({
-          filename: "compliance",
-          sheetName: "Compliance",
+          filename: "worklist",
+          sheetName: "Worklist",
           rows: all.map((r) => ({
             Client: r.clientId?.name || "",
             Type: r.type,
@@ -179,10 +179,10 @@ function CompliancePage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Compliance</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track filings and due dates</p>
+          <h1 className="page-title">Worklist</h1>
+          <p className="page-subtitle mt-1">Track filings and due dates</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
@@ -192,7 +192,7 @@ function CompliancePage() {
             <Download size={15} /> Excel
           </Button>
           <Button size="sm" onClick={() => { setEditing(null); setFormOpen(true); }}>
-            <Plus size={15} /> Add Compliance
+            <Plus size={15} /> Add Worklist Item
           </Button>
         </div>
       </div>
@@ -219,7 +219,7 @@ function CompliancePage() {
                 </button>
               ))}
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <div className="surface-bar px-3 py-2.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <select
                 value={type}
                 onChange={(e) => { setType(e.target.value); setPage(1); }}
@@ -249,13 +249,13 @@ function CompliancePage() {
           ) : records.length === 0 ? (
             <EmptyState
               variant="unavailable"
-              title="No compliance records found"
+              title="No worklist items found"
               description={
                 assigned === "unassigned"
-                  ? "No unassigned compliance records match your filters."
+                  ? "No unassigned worklist items match your filters."
                   : "No records match your current filters. Add one to start tracking due dates."
               }
-              action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Add Compliance</Button>}
+              action={<Button onClick={() => setFormOpen(true)}><Plus size={15} /> Add Worklist Item</Button>}
             />
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -292,7 +292,7 @@ function CompliancePage() {
 
       <ConfirmDialog
         open={!!deleting}
-        title="Delete Compliance"
+        title="Delete Worklist Item"
         message={`Delete ${deleting?.type} for ${deleting?.clientId?.name}?`}
         onConfirm={confirmDelete}
         onCancel={() => setDeleting(null)}
@@ -304,7 +304,7 @@ function CompliancePage() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="card p-6 text-sm text-slate-400">Loading compliance...</div>}>
+    <Suspense fallback={<div className="card p-6 text-sm text-slate-400">Loading worklist...</div>}>
       <CompliancePage />
     </Suspense>
   );

@@ -30,31 +30,31 @@ export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
 
   return (
     <>
-    <div className="card p-4 flex flex-col">
+    <div className="card card-interactive flex flex-col p-4">
       <div className="flex items-start justify-between gap-2 sm:gap-3">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs sm:text-sm font-semibold shrink-0">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-hairline bg-canvas text-xs font-semibold text-slate-600 sm:h-10 sm:w-10 sm:text-sm">
             {initials(client.name)}
           </div>
           <div className="min-w-0">
-            <Link href={`/clients/${client._id}`} className="block group">
-              <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate group-hover:text-indigo-700 transition-colors">
+            <Link href={`/clients/${client._id}`} className="group block">
+              <h3 className="truncate text-sm font-semibold tracking-[-0.011em] text-slate-900 transition-colors group-hover:text-brand-700 sm:text-base">
                 {client.name}
               </h3>
             </Link>
-            <div className="mt-1 flex flex-wrap gap-1.5 items-center">
-              <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-500">
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center rounded-md border border-hairline bg-canvas px-1.5 py-0.5 font-mono text-[10px] font-medium text-slate-500">
                 {client.clientCode || "—"}
               </span>
               <CategoryBadge category={client.category} />
             </div>
           </div>
         </div>
-        <div className="flex gap-0.5 shrink-0">
+        <div className="flex shrink-0 gap-0.5">
           {client.phone && (
             <button
               onClick={handleWhatsApp}
-              className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+              className="rounded-md p-2 text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600 sm:p-1.5"
               aria-label="WhatsApp client"
               title="WhatsApp client"
             >
@@ -63,14 +63,14 @@ export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
           )}
           <button
             onClick={() => onEdit(client)}
-            className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 sm:p-1.5"
             aria-label="Edit client"
           >
             <Pencil size={15} />
           </button>
           <button
             onClick={() => onDelete(client)}
-            className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 sm:p-1.5"
             aria-label="Delete client"
           >
             <Trash2 size={15} />
@@ -78,45 +78,50 @@ export default function ClientCard({ client, onEdit, onDelete, onAssigned }) {
         </div>
       </div>
 
-      <div className="mt-3 grid gap-1.5 text-xs sm:text-[13px] text-slate-600">
+      <div className="mt-3.5 grid gap-2 text-xs text-slate-600 sm:text-[13px]">
         <p className="flex items-center gap-2 truncate">
-          <IdCard size={14} className="text-slate-400 shrink-0" />
+          <IdCard size={14} className="shrink-0 text-slate-400" />
           <span className="font-mono text-slate-500">{client.pan || "—"}</span>
         </p>
         {client.gstin && (
           <p className="flex items-center gap-2 truncate">
-            <Building2 size={14} className="text-slate-400 shrink-0" />
-            <span className="font-mono text-slate-500 truncate">{client.gstin}</span>
+            <Building2 size={14} className="shrink-0 text-slate-400" />
+            <span className="truncate font-mono text-slate-500">{client.gstin}</span>
           </p>
         )}
         <p className="flex items-center gap-2 truncate">
-          <Mail size={14} className="text-slate-400 shrink-0" />
+          <Mail size={14} className="shrink-0 text-slate-400" />
           <span className="truncate">{client.email || "—"}</span>
         </p>
         <p className="flex items-center gap-2">
-          <Phone size={14} className="text-slate-400 shrink-0" />
+          <Phone size={14} className="shrink-0 text-slate-400" />
           {client.phone || "—"}
         </p>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-        <p className="text-xs text-slate-500 truncate">
+      <div className="mt-3.5 flex items-center justify-between gap-2 border-t border-hairline pt-3">
+        <p className="truncate text-xs text-slate-500">
           {unassigned ? (
             <button
               type="button"
               onClick={() => setAssignOpen(true)}
-              className="font-medium text-amber-700 hover:underline cursor-pointer"
+              className="cursor-pointer font-medium text-amber-700 transition-colors hover:text-amber-800 hover:underline"
               title="Assign staff"
             >
               Unassigned
             </button>
           ) : (
-            <>Staff: <span className="font-medium text-slate-700">{assignedStaffNames(client.assignedStaff)}</span></>
+            <>
+              Staff:{" "}
+              <span className="font-medium text-slate-700">
+                {assignedStaffNames(client.assignedStaff)}
+              </span>
+            </>
           )}
         </p>
         <Link
           href={`/clients/${client._id}`}
-          className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-800 shrink-0"
+          className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-brand-700 transition-colors hover:text-brand-800"
         >
           View <ArrowUpRight size={12} />
         </Link>

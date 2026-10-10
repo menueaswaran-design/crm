@@ -138,10 +138,10 @@ function TasksPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Tasks</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{total} tasks</p>
+          <h1 className="page-title">Tasks</h1>
+          <p className="page-subtitle mt-1">{total} tasks</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => handleExport("csv")} loading={exporting === "csv"} disabled={!!exporting}>
@@ -156,7 +156,7 @@ function TasksPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+      <div className="surface-bar px-3 py-2.5 grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
         <select
           value={status}
           onChange={(e) => { setStatus(e.target.value); setPage(1); }}

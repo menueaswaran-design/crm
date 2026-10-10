@@ -128,7 +128,7 @@
 ## 4. App Shell & Navigation
 
 ### 4.1 Top navigation (`components/layout/TopNav.jsx`)
-- Sticky bar: brand/firm name, desktop links — Dashboard, Clients, Compliance, Tasks, Documents, Invoices, **Staff** (admin only, `__admin_only`), **Companies** (super admin only, `__super_admin_only`).
+- Sticky bar: brand/firm name, desktop links — Dashboard, Clients, **Worklist** (compliance module), Tasks, Documents, Invoices, **Staff** (admin only, `__admin_only`), **Companies** (super admin only, `__super_admin_only`).
 - Links filtered through `hasPermission`/role; active route highlight.
 - Mobile: hamburger toggles slide-down drawer with same links.
 - Right side: `NotificationBell`, `UserMenu`; avatar = `initials(name)`.
@@ -150,7 +150,7 @@
 ## 5. Dashboard
 
 ### 5.1 Summary cards (`app/(app)/dashboard/page.js`)
-- **Clients** (total/active), **Compliance** (counts by status incl. derived OVERDUE), **Tasks** (counts by status incl. derived OVERDUE), **Documents** count.
+- **Clients** (total/active), **Worklist** (counts by status incl. derived OVERDUE), **Tasks** (counts by status incl. derived OVERDUE), **Documents** count.
 - Financial cards gated by `canViewFinancials`: **Total Revenue**, **Amount Received**, **Outstanding**, **Total Expenses** — forced to 0 for staff without `dashboardFinancials`.
 
 ### 5.2 Revenue overview
@@ -252,13 +252,15 @@ Indexes: text on `name/email/gstin`; unique `{companyId, clientCode}` sparse; `{
 
 ---
 
-## 7. Compliance Module
+## 7. Compliance Module (UI label: **Worklist**)
 
-### 7.1 Compliance page (`app/(app)/compliance/page.js`)
+> All internal names, routes (`/compliance`, `/api/compliance`), the `Compliance` model/collection and the `compliance` permission key are unchanged — only user-facing labels are branded "Worklist".
+
+### 7.1 Compliance page (`app/(app)/compliance/page.js`) — heading "Worklist"
 - **Tab counts** from `/api/compliance/counts`: All / Pending / In Progress / Overdue / Completed (honors assigned filter).
 - Filters: **status** (`?status=`, pre-set from URL query), **type**, **category**, **assigned staff**, search.
-- Export **CSV / Excel** (full filtered dataset via `fetchAllList`).
-- "Add Compliance" → ComplianceForm.
+- Export **CSV / Excel** (full filtered dataset via `fetchAllList`; files named `worklist`).
+- "Add Worklist Item" → ComplianceForm.
 
 ### 7.2 Compliance form (`components/compliance/ComplianceForm.jsx`)
 - Fields: Client (search picker), Type* (from `COMPLIANCE_TYPES`), Category (from `COMPLIANCE_CATEGORIES`), Period, Financial Year, Due Date*, Assigned Staff, Description, Priority (LOW/MEDIUM/HIGH), **Recurrence (NONE/MONTHLY/QUARTERLY/ANNUAL)**.
@@ -404,17 +406,29 @@ Indexes: `{clientId, invoiceDate, status, dueDate}`; `{isDeleted, status, invoic
 ## 10. Documents Module
 
 ### 10.1 Documents page (`app/(app)/documents/page.js`)
-- Search by name, **category filter** (GST, Income Tax, Bank Statement, TDS, ROC, KYC, Invoices, Other), pagination.
-- **Upload Document** modal; delete with ConfirmDialog; **CSV/Excel export**; `formatBytes` sizes.
+- **View toggle:** **By Client** (default) / **All Files** — same segmented-control pattern as the Clients page.
+- **By Client:** one collapsible card per client with all their documents nested inside. Search covers client name/code/PAN/GSTIN **and** file name; category filter applies across groups; pagination is **per client** so a client's files are never split across pages. Subtitle shows `N clients · M files`.
+- **All Files:** the flat card grid, sorted newest upload first.
+- Both views: `ClientSearchPicker` filter, category select, **Clear filters**, **CSV/Excel export**, `formatBytes` sizes.
 
 ### 10.2 Upload (`components/documents/UploadDocumentModal.jsx`)
 - Client search picker, category select (default "GST"), file picker/drop area showing chosen filename.
+- `lockClient` + `client` props pin the client when opened from a client card's upload button (title becomes `Upload Documents — <client>`); otherwise the client is chosen freely.
 - **Validation:** extensions only `pdf, docx, xlsx, xls, jpg, jpeg, png`; **max 10 MB**; inline error otherwise.
 - Submit → `POST /api/documents` (FormData) + **`DOCUMENT_UPLOADED` staff notification**; closes + refreshes.
 
 ### 10.3 Document card (`components/documents/DocumentCard.jsx`)
 - `FILE_ICONS` by extension (PDF, DOC, XLS/XLSX, IMG, generic), file name, formatted size, uploaded date, client name, category badge.
-- Actions: **View** (inline, new tab), **Download**, **Delete** (ConfirmDialog), client link.
+- Actions: **View** (inline, new tab), **Download**, **Delete** (ConfirmDialog).
+
+### 10.3b Document row (`components/documents/DocumentRow.jsx`)
+- Compact one-line-per-file row shared by the client detail page and the client-grouped card so both stay identical: icon tile, file name, category + format chips, size · date · uploader, View / Download / Delete.
+
+### 10.3c Client document card (`components/documents/ClientDocumentCard.jsx`)
+- Header: initials avatar, client name, GSTIN, `clientCode` chip, `CategoryBadge`, **`N files`** badge, total size + last upload date, staff names.
+- Collapsible (`aria-expanded` chevron, click anywhere on the header). Category breakdown chips when expanded.
+- Body: `DocumentRow` list, **first 5 then "Show all N files"** — every file for that client is already loaded, so expanding never refetches.
+- Actions: **Upload** (opens the modal locked to this client), **WhatsApp** (when a phone exists), **Open client** (`/clients/:id`).
 
 ### 10.4 Storage (`lib/storage.js`, `lib/cloudinary.js`, `lib/documents.js`)
 - **Cloudinary when configured**, else local `public/uploads/<clientId>/`.
@@ -425,8 +439,9 @@ Indexes: `{clientId, invoiceDate, status, dueDate}`; `{isDeleted, status, invoic
 ### 10.5 Documents API
 | Endpoint | Methods | Features |
 |---|---|---|
-| `/api/documents` | GET | `search`, `category`, `page`, `limit`; staff scoped to own clients |
+| `/api/documents` | GET | `search`, `category`, `clientId`, `page`, `limit`; staff scoped to own clients |
 | | POST | FormData: client/category/file; **extension allowlist + 10 MB cap**; Cloudinary or local storage |
+| `/api/documents/grouped` | GET | Same filters, but **grouped by client**: `$lookup` → `$group` → `$facet` returns `{ _id, name, clientCode, category, pan, gstin, phone, staff, totalDocuments, sizeBytes, lastUploadedAt, categoryCounts, documents[] }` per client plus `totals { clients, files }`. **Paginates per client** and returns every file for the clients on the page (capped at 200/client) so a card can expand without refetching. |
 | `/api/documents/[id]` | GET, DELETE | DELETE removes file from Cloudinary/local + soft-deletes record |
 | `/api/documents/[id]/view` | GET | Inline serve |
 | `/api/documents/[id]/download` | GET | Attachment serve |

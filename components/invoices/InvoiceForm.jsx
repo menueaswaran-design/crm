@@ -145,7 +145,7 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
 
           <div className="space-y-3">
             {items.map((item, idx) => (
-              <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2">
+              <div key={idx} className="rounded-lg border border-hairline bg-canvas-deep/50 p-3 space-y-2">
                 <Input
                   placeholder="Description"
                   value={item.description}
@@ -195,7 +195,7 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
           </div>
         </div>
 
-        <div className="rounded-lg bg-slate-50 p-4 text-sm space-y-1">
+        <div className="rounded-lg bg-canvas-deep p-4 text-sm space-y-1">
           <div className="flex justify-between text-slate-600">
             <span>Subtotal</span>
             <span className="font-medium">{formatINR(subtotal)}</span>
@@ -204,7 +204,7 @@ export default function InvoiceForm({ open, onClose, invoice, onSaved }) {
             <span>GST {gstRate}%</span>
             <span className="font-medium">{formatINR(gstAmount)}</span>
           </div>
-          <div className="flex justify-between font-semibold text-slate-900 text-base pt-1 border-t border-slate-200">
+          <div className="flex justify-between font-semibold text-slate-900 text-base pt-1 border-t border-hairline">
             <span>Total</span>
             <span>{formatINR(total)}</span>
           </div>

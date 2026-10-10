@@ -73,10 +73,10 @@ export default function DocumentCard({ doc, onDelete }) {
         </div>
       </div>
 
-      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex items-center gap-2">
+      <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-hairline flex items-center gap-2">
         <button
           onClick={() => window.open(`/api/documents/${doc._id}/view`, "_blank")}
-          className="shrink-0 p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-colors"
+          className="shrink-0 p-2 rounded-lg border border-hairline text-slate-500 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-colors"
           aria-label="View document"
           title="View document"
         >

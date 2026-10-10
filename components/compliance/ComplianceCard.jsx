@@ -51,17 +51,17 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
   };
 
   return (
-    <div className={`card p-3.5 sm:p-4 flex flex-col transition-opacity ${isCompleted ? "opacity-75" : ""}`}>
+    <div className={`card card-interactive flex flex-col p-3.5 transition-opacity sm:p-4 ${isCompleted ? "opacity-75" : ""}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
           <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-lg flex items-center justify-center text-xs font-semibold shrink-0 ${
             isCompleted
-              ? "bg-emerald-50 text-emerald-600"
+              ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
               : isLate
-              ? "bg-rose-50 text-rose-600"
+              ? "bg-rose-50 text-rose-600 border border-rose-100"
               : isSoon
-              ? "bg-amber-50 text-amber-600"
-              : "bg-slate-100 text-slate-500"
+              ? "bg-amber-50 text-amber-600 border border-amber-100"
+              : "bg-slate-50 text-slate-500 border border-hairline"
           }`}>
             {isCompleted ? <CheckCircle2 size={16} /> : days !== null ? `${days}d` : "—"}
           </div>
@@ -120,14 +120,14 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
 
       <div className="mt-3 sm:mt-4 space-y-2 text-xs sm:text-[13px] text-slate-600">
         <p className="flex items-center gap-2">
-          <CalendarDays size={14} className="text-slate-300 shrink-0" />
+          <CalendarDays size={14} className="text-slate-400 shrink-0" />
           <span className="font-medium text-slate-700">Due:</span>
           <span className={!isCompleted && isLate ? "text-rose-600 font-semibold" : !isCompleted && isSoon ? "text-amber-600 font-semibold" : ""}>
             {formatDate(record.dueDate)}
           </span>
         </p>
         <p className="flex items-center gap-2">
-          <Flag size={14} className="text-slate-300 shrink-0" />
+          <Flag size={14} className="text-slate-400 shrink-0" />
           <span className="font-medium text-slate-700">FY:</span> {record.financialYear || "—"}
         </p>
         <p className="flex items-center gap-2">
@@ -141,7 +141,7 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
       </div>
 
       {!isCompleted && (
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex flex-wrap gap-2">
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-hairline flex flex-wrap gap-2">
           {status === "PENDING" && (
             <Button size="sm" variant="secondary" onClick={() => changeStatus("IN_PROGRESS")} loading={updating}>
               <PlayCircle size={14} /> Start
@@ -174,7 +174,7 @@ export default function ComplianceCard({ record, onEdit, onDelete, onStatusChang
       )}
 
       {isCompleted && onStatusChange && (
-        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100">
+        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-hairline">
           <Button
             size="sm"
             variant="ghost"

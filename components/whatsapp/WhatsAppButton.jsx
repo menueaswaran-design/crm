@@ -43,7 +43,7 @@ export default function WhatsAppButton({
 
   const buttonClass = iconOnly
     ? `inline-flex items-center justify-center rounded-md p-2 text-emerald-600 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 focus-visible:ring-emerald-400 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${className}`
-    : `inline-flex items-center gap-1.5 font-medium rounded-md transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap text-xs px-3 py-2 bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-50 hover:border-slate-300 focus-visible:ring-slate-400 ${className}`;
+    : `inline-flex items-center gap-1.5 font-medium rounded-md transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none whitespace-nowrap text-xs px-3 py-2 bg-white text-slate-700 border border-hairline shadow-sm hover:bg-slate-50 hover:border-hairline-strong focus-visible:ring-slate-400 ${className}`;
 
   return (
     <>

@@ -80,29 +80,32 @@ export default function Modal({
     >
       {/* Dimmed backdrop — used by every modal */}
       <div
-        className="absolute inset-0 bg-slate-900/50 animate-fade-in"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
       <div
         ref={panelRef}
-        className={`relative z-10 w-full ${maxWidth} max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg animate-scale-in`}
+        className={`relative z-10 w-full ${maxWidth} max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden rounded-xl border border-hairline bg-white shadow-popover animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 px-4 sm:px-5 py-3 sm:py-4">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-hairline bg-canvas/40 px-4 sm:px-5 py-3.5 sm:py-4">
           <div className="min-w-0 pr-2">
-            <h2 id={titleId} className="text-base sm:text-lg font-semibold text-slate-900 leading-snug">
+            <h2
+              id={titleId}
+              className="text-[15px] sm:text-base font-semibold tracking-[-0.014em] text-slate-900 leading-snug"
+            >
               {title}
             </h2>
             {description && (
-              <p className="mt-0.5 text-sm text-slate-500">{description}</p>
+              <p className="mt-0.5 text-[13px] leading-relaxed text-slate-500">{description}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-slate-400 outline-none transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-indigo-300"
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 outline-none transition-colors hover:bg-slate-100 hover:text-slate-700 focus-visible:ring-2 focus-visible:ring-brand-300"
             aria-label="Close"
           >
             <X size={18} />
@@ -112,7 +115,7 @@ export default function Modal({
         <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 sm:py-5">{children}</div>
 
         {footer && (
-          <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 sm:px-5 py-3 sm:py-3.5">
+          <div className="shrink-0 border-t border-hairline bg-canvas/50 px-4 sm:px-5 py-3 sm:py-3.5">
             {footer}
           </div>
         )}

@@ -25,7 +25,7 @@ const TYPE_META = {
   COMPLIANCE_OVERDUE: { icon: AlertTriangle, cls: "bg-rose-50 text-rose-600" },
   PAYMENT_DUE: { icon: Banknote, cls: "bg-emerald-50 text-emerald-600" },
   DOCUMENT_UPLOADED: { icon: FileUp, cls: "bg-brand-50 text-brand-600" },
-  TASK_ASSIGNED: { icon: ClipboardList, cls: "bg-indigo-50 text-indigo-600" },
+  TASK_ASSIGNED: { icon: ClipboardList, cls: "bg-brand-50 text-brand-600" },
   LOGIN: { icon: LogIn, cls: "bg-sky-50 text-sky-600" },
 };
 
@@ -79,41 +79,44 @@ export default function NotificationBell() {
           setOpen((v) => !v);
           if (!open) load();
         }}
-        className="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors"
+        className="relative rounded-lg p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800"
         aria-label="Notifications"
+        aria-expanded={open}
       >
         <Bell size={19} />
         {unread > 0 && (
-          <span className="absolute top-1 right-1 h-4 min-w-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+          <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white num">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-popover z-50 overflow-hidden animate-slide-down">
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+        <div className="absolute right-0 z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] animate-slide-down overflow-hidden rounded-2xl border border-hairline bg-white shadow-popover">
+          <div className="flex items-center justify-between border-b border-hairline bg-canvas/50 px-5 py-3">
             <div>
-              <p className="text-sm font-semibold text-slate-900">Notifications</p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[13px] font-semibold tracking-[-0.011em] text-slate-900">
+                Notifications
+              </p>
+              <p className="text-[11px] text-slate-500 num">
                 {unread} unread · {items.length} total
               </p>
             </div>
             <button
               onClick={markAll}
               disabled={loading || unread === 0}
-              className="text-xs font-medium text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 disabled:opacity-40"
+              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-brand-600 transition-colors hover:bg-brand-50 hover:text-brand-700 disabled:pointer-events-none disabled:opacity-40"
             >
               <CheckCheck size={13} /> Mark all
             </button>
           </div>
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+          <div className="max-h-80 divide-y divide-hairline/70 overflow-y-auto">
             {items.length === 0 && (
               <div className="px-5 py-10 text-center">
-                <div className="mx-auto h-10 w-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center">
-                  <Bell size={18} />
+                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg border border-hairline bg-canvas text-slate-400">
+                  <Bell size={16} />
                 </div>
-                <p className="mt-3 text-sm text-slate-500">You&apos;re all caught up</p>
+                <p className="mt-2.5 text-[13px] text-slate-500">You&apos;re all caught up</p>
               </div>
             )}
             {items.map((n) => {
@@ -123,7 +126,7 @@ export default function NotificationBell() {
               return (
                 <div
                   key={String(n._id)}
-                  className={`px-5 py-3.5 flex items-start gap-3 ${n.isRead ? "" : "bg-brand-50/40"} ${isLogin ? "cursor-pointer hover:bg-slate-50" : ""}`}
+                  className={`flex items-start gap-3 px-5 py-3 transition-colors ${n.isRead ? "" : "bg-brand-50/40"} ${isLogin ? "cursor-pointer hover:bg-slate-50" : ""}`}
                   onClick={() => {
                     if (isLogin) {
                       router.push("/staff?tab=login-details");
@@ -131,24 +134,30 @@ export default function NotificationBell() {
                     }
                   }}
                 >
-                  <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${meta.cls}`}>
+                  <div
+                    className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${meta.cls}`}
+                  >
                     <Icon size={15} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-slate-900">{n.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">{n.message}</p>
-                    <p className="text-[11px] text-slate-400 mt-1">{formatDate(n.createdAt)}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium leading-snug text-slate-900">
+                      {n.title}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-snug text-slate-500">{n.message}</p>
+                    <p className="mt-1 text-[11px] text-slate-400">{formatDate(n.createdAt)}</p>
                   </div>
-                  {!n.isRead && <span className="mt-1.5 h-2 w-2 rounded-full bg-brand-500 shrink-0" />}
+                  {!n.isRead && (
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-500" />
+                  )}
                 </div>
               );
             })}
           </div>
-          <div className="border-t border-slate-100 p-2 bg-slate-50/60">
+          <div className="border-t border-hairline bg-canvas/50 p-1.5">
             <Link
               href="/notifications"
               onClick={() => setOpen(false)}
-              className="block text-center text-[13px] font-medium text-brand-700 hover:text-brand-800 py-2 rounded-xl hover:bg-brand-50"
+              className="block rounded-lg py-2 text-center text-[13px] font-medium text-brand-700 transition-colors hover:bg-brand-50"
             >
               View all notifications
             </Link>

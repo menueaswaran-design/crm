@@ -111,10 +111,10 @@ function StaffPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Staff</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Team members and access</p>
+          <h1 className="page-title">Staff</h1>
+          <p className="page-subtitle mt-1">Team members and access</p>
         </div>
         {tab === "members" && (
           <div className="flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@ function StaffPage() {
         )}
       </div>
 
-      <div className="flex items-center gap-1 border-b border-slate-200">
+      <div className="flex items-center gap-1 border-b border-hairline">
         <button
           onClick={() => setTab("members")}
           className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
@@ -168,14 +168,14 @@ function StaffPage() {
 
       {error && <ErrorBanner message={error} onRetry={load} />}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="surface-bar px-3 py-2.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-0 sm:min-w-56">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="input-base pl-9"
+            className="input-base input-search"
           />
         </div>
         <p className="text-sm text-slate-500 sm:ml-auto">
@@ -202,16 +202,16 @@ function StaffPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-100 bg-slate-50/60">
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Member</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Contact</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Role</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Last Login</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Status</th>
+                <tr className="table-head border-b border-hairline bg-canvas/60">
+                  <th className="px-5 py-3.5">Member</th>
+                  <th className="px-5 py-3.5">Contact</th>
+                  <th className="px-5 py-3.5">Role</th>
+                  <th className="px-5 py-3.5">Last Login</th>
+                  <th className="px-5 py-3.5">Status</th>
                   {isAdmin && <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-hairline">
                 {filtered.map((u) => {
                   const isSelf = currentUser?._id === u._id;
                   return (

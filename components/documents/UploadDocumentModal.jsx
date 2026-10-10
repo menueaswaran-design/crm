@@ -17,7 +17,14 @@ const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50 MB per batch
 
 const fileKey = (f) => `${f.name}:${f.size}:${f.lastModified}`;
 
-export default function UploadDocumentModal({ open, onClose, onUploaded, clientId }) {
+export default function UploadDocumentModal({
+  open,
+  onClose,
+  onUploaded,
+  clientId,
+  client,
+  lockClient = false,
+}) {
   const [selectedClient, setSelectedClient] = useState(clientId || "");
   const [category, setCategory] = useState("GST");
   const [files, setFiles] = useState([]);
@@ -153,7 +160,7 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
     <Modal
       open={open}
       onClose={onClose}
-      title="Upload Documents"
+      title={lockClient ? `Upload Documents — ${client?.name || "Client"}` : "Upload Documents"}
       maxWidth="max-w-xl"
       footer={
         <div className="flex justify-end gap-3">
@@ -178,8 +185,9 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
         <ClientSearchPicker
           value={selectedClient}
           onChange={setSelectedClient}
-          selectedClient={clientId ? { _id: clientId } : null}
+          selectedClient={client || (clientId ? { _id: clientId } : null)}
           required
+          disabled={lockClient}
         />
 
         <Select label="Category" required value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -212,10 +220,10 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
             onDrop={handleDrop}
             className={`flex flex-col items-center justify-center border border-dashed rounded-lg p-5 cursor-pointer transition-colors ${
               dragging
-                ? "border-indigo-400 bg-indigo-50/60"
+                ? "border-indigo-400 bg-brand-50/60"
                 : hasFiles
                   ? "border-emerald-300 bg-emerald-50/50"
-                  : "border-slate-300 hover:border-slate-400"
+                  : "border-hairline-strong hover:border-slate-400"
             }`}
           >
             <UploadCloud
@@ -241,11 +249,11 @@ export default function UploadDocumentModal({ open, onClose, onUploaded, clientI
           </label>
 
           {hasFiles && (
-            <ul className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-lg border border-slate-200">
+            <ul className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-lg border border-hairline">
               {files.map((f, i) => (
                 <li
                   key={fileKey(f)}
-                  className="flex items-center gap-2 border-b border-slate-100 px-3 py-2 last:border-b-0"
+                  className="flex items-center gap-2 border-b border-hairline px-3 py-2 last:border-b-0"
                 >
                   <FileText size={15} className="shrink-0 text-slate-400" />
                   <span className="min-w-0 flex-1 truncate text-xs text-slate-700" title={f.name}>

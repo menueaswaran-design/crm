@@ -63,7 +63,7 @@ export default function InvoiceCards({ invoices, onPayment, onEdit, onDelete }) 
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-2 pt-2 border-t border-hairline">
                 {inv.outstandingAmount > 0 && (
                   <Button size="sm" variant="secondary" onClick={() => onPayment(inv)}>
                     <Banknote size={13} /> Payment

@@ -145,7 +145,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
         />
-        <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+        <div className="flex items-center justify-between rounded-lg bg-canvas-deep border border-hairline px-4 py-3">
           <div>
             <p className="text-sm font-medium text-slate-900">Active account</p>
             <p className="text-xs text-slate-500">Inactive members cannot access the CRM.</p>
@@ -165,8 +165,8 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
           </button>
         </div>
 
-        {permissions.length === 0 ? null : <div className="rounded-lg border border-slate-200 overflow-hidden">
-            <div className="flex items-start gap-2.5 bg-slate-50 border-b border-slate-200 px-4 py-3">
+        {permissions.length === 0 ? null : <div className="rounded-lg border border-hairline overflow-hidden">
+            <div className="flex items-start gap-2.5 bg-canvas-deep border-b border-hairline px-4 py-3">
               {permissions.includes("dashboard") ? (
                 <ShieldAlert size={16} className="text-amber-500 mt-0.5 shrink-0" />
               ) : (
@@ -179,7 +179,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
                 </p>
               </div>
             </div>
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-hairline">
               {NAV_PERMISSIONS.map((perm) => {
                 const on = permissions.includes(perm.key);
                 const risky = perm.key === "dashboard";
@@ -214,7 +214,7 @@ export default function StaffForm({ open, onClose, staff, onSaved }) {
                 );
               })}
             </ul>
-            <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <div className="px-4 py-2.5 bg-canvas-deep border-t border-hairline flex items-center justify-between">
               <p className="text-xs text-slate-500">{permissions.length} of {NAV_PERMISSIONS.length} sections enabled</p>
               <button
                 type="button"

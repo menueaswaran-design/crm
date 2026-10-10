@@ -167,13 +167,13 @@ function ClientsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">Clients</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>
+          <h1 className="page-title">Clients</h1>
+          <p className="page-subtitle mt-1">{subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-md border border-slate-200 bg-white overflow-hidden" role="group" aria-label="View format">
+          <div className="flex rounded-md border border-hairline bg-white overflow-hidden" role="group" aria-label="View format">
             <button
               onClick={() => setView("grid")}
               title="Card view"
@@ -213,14 +213,14 @@ function ClientsPage() {
 
       {error && <ErrorBanner message={error} onRetry={load} />}
 
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      <div className="surface-bar px-3 py-2.5 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="relative flex-1 min-w-0 sm:min-w-56">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search by name, PAN, GSTIN, phone or email..."
-            className="input-base pl-9"
+            className="input-base input-search"
           />
         </div>
         <select

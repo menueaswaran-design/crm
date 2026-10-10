@@ -27,7 +27,7 @@ export default function ClientsTable({ clients, onEdit, onDelete, onAssigned }) 
     <div className="card overflow-x-auto">
       <table className="w-full text-sm text-left">
         <thead>
-          <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+          <tr className="table-head border-b border-hairline bg-canvas/60">
             <th className="px-4 py-3 font-medium">Client</th>
             <th className="px-4 py-3 font-medium">Category</th>
             <th className="px-4 py-3 font-medium">PAN / GSTIN</th>
@@ -37,11 +37,11 @@ export default function ClientsTable({ clients, onEdit, onDelete, onAssigned }) 
             <th className="px-4 py-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+        <tbody className="divide-y divide-hairline">
           {clients.map((c) => (
-            <tr key={c._id} className="hover:bg-slate-50 transition-colors">
+            <tr key={c._id} className="table-row">
               <td className="px-4 py-3">
-                <Link href={`/clients/${c._id}`} className="font-medium text-slate-900 hover:text-indigo-700">
+                <Link href={`/clients/${c._id}`} className="font-medium text-slate-900 hover:text-brand-700">
                   {c.name}
                 </Link>
                 {c.clientCode && (
@@ -81,7 +81,7 @@ export default function ClientsTable({ clients, onEdit, onDelete, onAssigned }) 
                 <div className="flex gap-0.5 justify-end">
                   <Link
                     href={`/clients/${c._id}`}
-                    className="p-1.5 rounded-md text-slate-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
+                    className="p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-brand-50 transition-colors"
                     aria-label="View client"
                   >
                     <ArrowUpRight size={15} />

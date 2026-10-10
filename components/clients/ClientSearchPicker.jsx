@@ -150,13 +150,13 @@ export default function ClientSearchPicker({
               }}
               onFocus={() => setOpen(true)}
               placeholder="Search by name, PAN, GSTIN, phone..."
-              className={`input-base pl-9 ${error ? "input-error" : ""}`}
+              className={`input-base input-search ${error ? "input-error" : ""}`}
             />
           </div>
         )}
 
         {open && !selected && !disabled && (
-          <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+          <div className="absolute z-50 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-hairline bg-white shadow-lg">
             {loading ? (
               <p className="px-3 py-2.5 text-xs text-slate-500">Searching...</p>
             ) : options.length === 0 ? (

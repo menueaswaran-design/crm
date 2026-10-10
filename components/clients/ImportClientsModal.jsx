@@ -215,7 +215,7 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
                 <button
                   type="button"
                   onClick={() => setShowAllErrors(!showAllErrors)}
-                  className="w-full border-t border-emerald-200 px-2 py-1.5 text-center font-medium text-indigo-600 hover:bg-indigo-50"
+                  className="w-full border-t border-emerald-200 px-2 py-1.5 text-center font-medium text-brand-600 hover:bg-brand-50"
                 >
                   {showAllErrors ? "Show less" : `Show all ${result.errors.length} errors`}
                 </button>
@@ -227,9 +227,9 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
 
       {!result && step === 1 && (
         <form id="import-preview-form" onSubmit={handlePreview} className="space-y-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-lg border border-hairline bg-canvas-deep p-4">
             <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
+              <div className="rounded-lg bg-brand-50 p-2 text-brand-600">
                 <FileSpreadsheet size={18} />
               </div>
               <div className="text-sm text-slate-600">
@@ -297,8 +297,8 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
             </div>
           )}
 
-          <div className="rounded-lg border border-slate-200 bg-white">
-            <div className="border-b border-slate-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          <div className="rounded-lg border border-hairline bg-white">
+            <div className="border-b border-hairline px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
               Mapped Columns
             </div>
             <div className="divide-y divide-slate-50">
@@ -308,8 +308,8 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
                     <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-600">
                       {m.excelHeader}
                     </span>
-                    <ArrowRight size={14} className="text-slate-300" />
-                    <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                    <ArrowRight size={14} className="text-slate-400" />
+                    <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                       {m.label}
                     </span>
                   </div>
@@ -320,8 +320,8 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
           </div>
 
           {extraFields.length > 0 && (
-            <div className="rounded-lg border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <div className="rounded-lg border border-hairline bg-white">
+              <div className="border-b border-hairline px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Extra Columns — Name them for storage
               </div>
               <div className="divide-y divide-slate-50">
@@ -330,7 +330,7 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
                     <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-mono text-slate-600 min-w-[120px]">
                       {m.excelHeader}
                     </span>
-                    <span className="text-slate-300">→</span>
+                    <span className="text-slate-400">→</span>
                     <input
                       type="text"
                       placeholder={m.excelHeader}
@@ -353,21 +353,21 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
           )}
 
           {missingOptional.length > 0 && (
-            <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-xs text-slate-500">
+            <div className="rounded-lg border border-hairline bg-canvas-deep px-4 py-3 text-xs text-slate-500">
               <span className="font-medium">Other available fields not in your Excel: </span>
               {missingOptional.map((f) => f.label).join(", ")}
             </div>
           )}
 
           {sampleRows.length > 0 && (
-            <div className="rounded-lg border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <div className="rounded-lg border border-hairline bg-white">
+              <div className="border-b border-hairline px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Sample Data (first {sampleRows.length} rows)
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100">
+                    <tr className="border-b border-hairline">
                       {mappedFields.slice(0, 6).map((m) => (
                         <th key={m.clientField} className="px-3 py-2 text-left font-medium text-slate-500">
                           {m.label}
@@ -380,7 +380,7 @@ export default function ImportClientsModal({ open, onClose, onImported }) {
                       <tr key={i} className="border-b border-slate-50">
                         {mappedFields.slice(0, 6).map((m) => (
                           <td key={m.clientField} className="px-3 py-2 text-slate-700 max-w-[120px] truncate">
-                            {row.mapped[m.clientField] || <span className="text-slate-300">—</span>}
+                            {row.mapped[m.clientField] || <span className="text-slate-400">—</span>}
                           </td>
                         ))}
                       </tr>

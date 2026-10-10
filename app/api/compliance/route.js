@@ -116,14 +116,14 @@ export async function POST(request) {
         userId: assignedStaff,
         companyId: user.companyId,
         type: "COMPLIANCE_DUE",
-        title: "Compliance assigned",
+        title: "Worklist item assigned",
         message: `${record.type} for ${client.name} is due on ${dueDate.toLocaleDateString("en-IN")}.`,
         entityType: "Compliance",
         entityId: record._id,
       });
     }
 
-    return ok(record, "Compliance created successfully.");
+    return ok(record, "Worklist item created successfully.");
   } catch (error) {
     return handleError(error);
   }

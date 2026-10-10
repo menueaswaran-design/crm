@@ -233,13 +233,13 @@ export default function AssignStaffModal({ open, onClose, client, onAssigned }) 
                 }}
                   className={`w-full flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors ${
                     active
-                      ? "border-indigo-300 bg-indigo-50 text-indigo-900"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                      ? "border-indigo-300 bg-brand-50 text-indigo-900"
+                      : "border-hairline bg-white text-slate-700 hover:border-hairline-strong hover:bg-slate-50"
                   }`}
                 >
                   <span
                     className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
-                      active ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600"
+                      active ? "bg-brand-600 text-white" : "bg-slate-100 text-slate-600"
                     }`}
                   >
                     {initials(u.name)}
@@ -248,7 +248,7 @@ export default function AssignStaffModal({ open, onClose, client, onAssigned }) 
                     <span className="block text-sm font-medium truncate">{u.name}</span>
                     <span className="block text-xs text-slate-500 truncate">{u.email || "—"}</span>
                   </span>
-                  {active && <Check size={16} className="shrink-0 text-indigo-600" />}
+                  {active && <Check size={16} className="shrink-0 text-brand-600" />}
                 </button>
               );
             })}

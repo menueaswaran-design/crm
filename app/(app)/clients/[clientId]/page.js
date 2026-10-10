@@ -21,16 +21,11 @@ import {
   CheckSquare,
   Pencil,
   Upload,
-  Download,
-  Eye,
-  File,
-  FolderOpen,
 } from "lucide-react";
 import { apiFetch, deleteData } from "@/lib/client";
 import {
   maskAadhaar,
   formatDate,
-  formatBytes,
   daysRemaining,
   getErrorMessage,
 } from "@/lib/utils";
@@ -41,6 +36,7 @@ import Button from "@/components/common/Button";
 import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
 import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
+import DocumentRow from "@/components/documents/DocumentRow";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
 import Loading from "@/components/common/Loading";
 import EmptyState from "@/components/common/EmptyState";
@@ -54,16 +50,6 @@ const CATEGORY_GRADIENTS = {
   Partnership: "from-amber-400 to-orange-600",
   HUF: "from-rose-400 to-pink-600",
   Other: "from-slate-400 to-slate-600",
-};
-
-const FILE_ICONS = {
-  pdf: { cls: "bg-rose-50 text-rose-600", icon: FileText },
-  xlsx: { cls: "bg-emerald-50 text-emerald-600", icon: File },
-  xls: { cls: "bg-emerald-50 text-emerald-600", icon: File },
-  docx: { cls: "bg-sky-50 text-sky-600", icon: FileText },
-  jpg: { cls: "bg-purple-50 text-purple-600", icon: File },
-  jpeg: { cls: "bg-purple-50 text-purple-600", icon: File },
-  png: { cls: "bg-purple-50 text-purple-600", icon: File },
 };
 
 export default function ClientDetailsPage() {
@@ -156,7 +142,7 @@ export default function ClientDetailsPage() {
     : [];
 
   const statTiles = [
-    { label: "Compliance", value: counts.compliance ?? compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
+    { label: "Worklist", value: counts.compliance ?? compliance.length, icon: CalendarClock, cls: "bg-amber-50 text-amber-600", href: "/compliance" },
     { label: "Tasks", value: counts.tasks ?? tasks.length, icon: CheckSquare, cls: "bg-sky-50 text-sky-600", href: "/tasks" },
     { label: "Documents", value: counts.documents ?? documents.length, icon: FileText, cls: "bg-brand-50 text-brand-600", href: `/documents?clientId=${clientId}`, anchor: "documents" },
     { label: "Invoices", value: counts.invoices ?? invoices.length, icon: Receipt, cls: "bg-emerald-50 text-emerald-600", href: "/invoices" },
@@ -228,7 +214,7 @@ export default function ClientDetailsPage() {
             <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4">
               {statTiles.map((t) => {
                 const tileClass =
-                  "flex items-center gap-2.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 card-hover min-w-[8.5rem]";
+                  "flex items-center gap-2.5 rounded-xl bg-white border border-hairline px-3.5 py-2.5 card-hover min-w-[8.5rem]";
                 const inner = (
                   <>
                     <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${t.cls}`}>
@@ -262,7 +248,7 @@ export default function ClientDetailsPage() {
           <dl className="space-y-3.5">
             {infoItems.map((item) => (
               <div key={item.label} className="flex items-start gap-3">
-                <item.icon size={15} className="text-slate-300 mt-0.5 shrink-0" />
+                <item.icon size={15} className="text-slate-400 mt-0.5 shrink-0" />
                 <div className="min-w-0">
                   <dt className="text-[11px] uppercase tracking-wider text-slate-400">{item.label}</dt>
                   {item.assignible ? (
@@ -284,12 +270,12 @@ export default function ClientDetailsPage() {
             ))}
             {extraFields.length > 0 && (
               <>
-                <div className="border-t border-slate-100 pt-3 mt-3">
+                <div className="border-t border-hairline pt-3 mt-3">
                   <p className="text-[11px] uppercase tracking-wider text-slate-400 mb-3">Additional Fields</p>
                 </div>
                 {extraFields.map(([key, value]) => (
                   <div key={key} className="flex items-start gap-3">
-                    <FileText size={15} className="text-slate-300 mt-0.5 shrink-0" />
+                    <FileText size={15} className="text-slate-400 mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <dt className="text-[11px] uppercase tracking-wider text-slate-400">{key}</dt>
                       <dd className="text-sm text-slate-800 break-words font-medium">{value || "—"}</dd>
@@ -332,7 +318,7 @@ export default function ClientDetailsPage() {
                   ? "bg-rose-50/60 border-rose-100"
                   : nextDays !== null && nextDays <= 7
                   ? "bg-amber-50/60 border-amber-100"
-                  : "bg-slate-50 border-slate-100"
+                  : "bg-slate-50 border-hairline"
               }`}>
                 <p className={`flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-semibold ${
                   nextDays !== null && nextDays < 0 ? "text-rose-700" : nextDays !== null && nextDays <= 7 ? "text-amber-700" : "text-slate-500"
@@ -360,7 +346,7 @@ export default function ClientDetailsPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="font-semibold text-slate-900">Compliance</h2>
+                <h2 className="font-semibold text-slate-900">Worklist</h2>
                 <p className="text-xs text-slate-400 mt-0.5">Recent records</p>
               </div>
               <Link href="/compliance" className="text-sm font-medium text-brand-700 hover:text-brand-800">
@@ -368,7 +354,7 @@ export default function ClientDetailsPage() {
               </Link>
             </div>
             {compliance.length === 0 ? (
-              <EmptyState compact title="No compliance records" description="Filings for this client will appear here." />
+              <EmptyState compact title="No worklist items" description="Filings for this client will appear here." />
             ) : (
               <ul className="divide-y divide-slate-50">
                 {compliance.slice(0, 5).map((c) => (
@@ -408,7 +394,7 @@ export default function ClientDetailsPage() {
                 {tasks.slice(0, 5).map((t) => (
                   <li key={t._id} className="py-3 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <CheckSquare size={14} className="text-slate-300 shrink-0" />
+                      <CheckSquare size={14} className="text-slate-400 shrink-0" />
                       <p className="text-sm text-slate-700 truncate">{t.title}</p>
                     </div>
                     <StatusBadge status={t.status} />
@@ -497,64 +483,11 @@ export default function ClientDetailsPage() {
               />
             ) : (
               <ul className="divide-y divide-slate-50">
-                {visibleDocuments.map((d) => {
-                  const meta = FILE_ICONS[(d.format || "").toLowerCase()] || {
-                    cls: "bg-slate-100 text-slate-600",
-                    icon: File,
-                  };
-                  const Icon = meta.icon;
-                  return (
-                    <li key={d._id} className="py-3 flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}>
-                        <Icon size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-slate-900 break-all leading-snug">{d.name}</p>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-                            <FolderOpen size={11} /> {d.category}
-                          </span>
-                          <span className="inline-flex items-center rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-brand-700">
-                            {d.format || "file"}
-                          </span>
-                          <span className="text-xs text-slate-400">
-                            {formatBytes(d.size)} · {formatDate(d.uploadedAt || d.createdAt)}
-                            {d.uploadedBy?.name ? ` · ${d.uploadedBy.name}` : ""}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/api/documents/${d._id}/view`, "_blank")}
-                          className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                          aria-label={`View ${d.name}`}
-                          title="View"
-                        >
-                          <Eye size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => window.open(`/api/documents/${d._id}/download`, "_blank")}
-                          className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                          aria-label={`Download ${d.name}`}
-                          title="Download"
-                        >
-                          <Download size={15} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteDoc(d)}
-                          className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                          aria-label={`Delete ${d.name}`}
-                          title="Delete"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
+                {visibleDocuments.map((d) => (
+                  <li key={d._id}>
+                    <DocumentRow doc={d} onDelete={setDeleteDoc} />
+                  </li>
+                ))}
               </ul>
             )}
           </section>

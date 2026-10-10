@@ -177,7 +177,7 @@ export default function DashboardPage() {
     return (
       <div className="space-y-6">
         <div className="skeleton h-8 w-64" />
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="stagger grid grid-cols-2 gap-4 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="card p-5 space-y-3">
               <div className="skeleton h-10 w-10 rounded-xl" />
@@ -207,17 +207,17 @@ export default function DashboardPage() {
       label: "Total Clients",
       value: summary?.totalClients ?? 0,
       icon: Users,
-      tile: "from-brand-500 to-brand-700",
+      tile: "bg-brand-50 text-brand-600 border border-brand-100",
       sub: "client records",
       href: "/clients?all=1",
     },
     {
-      label: "Active Compliance",
+      label: "Active Worklist",
       value:
         (summary?.compliance?.PENDING ?? 0) +
         (summary?.compliance?.IN_PROGRESS ?? 0),
       icon: FileCheck2,
-      tile: "from-amber-400 to-orange-500",
+      tile: "bg-amber-50 text-amber-600 border border-amber-100",
       sub: "in progress",
       href: "/compliance?status=PENDING",
     },
@@ -226,7 +226,7 @@ export default function DashboardPage() {
       value:
         (summary?.tasks?.PENDING ?? 0) + (summary?.tasks?.IN_PROGRESS ?? 0),
       icon: CheckSquare,
-      tile: "from-sky-400 to-blue-600",
+      tile: "bg-sky-50 text-sky-600 border border-sky-100",
       sub: "in progress",
       href: "/tasks?status=PENDING",
     },
@@ -235,7 +235,7 @@ export default function DashboardPage() {
       value:
         (summary?.compliance?.OVERDUE ?? 0) + (summary?.tasks?.OVERDUE ?? 0),
       icon: AlertTriangle,
-      tile: "from-rose-400 to-rose-600",
+      tile: "bg-rose-50 text-rose-600 border border-rose-100",
       sub: "needs attention",
       href: "/compliance?status=OVERDUE",
       alert: (summary?.compliance?.OVERDUE ?? 0) + (summary?.tasks?.OVERDUE ?? 0) > 0,
@@ -244,7 +244,7 @@ export default function DashboardPage() {
       label: "Total Revenue",
       value: formatINR(summary?.totalRevenue ?? 0),
       icon: TrendingUp,
-      tile: "from-emerald-400 to-teal-600",
+      tile: "bg-emerald-50 text-emerald-600 border border-emerald-100",
       sub: "billed",
       financial: true,
     },
@@ -252,7 +252,7 @@ export default function DashboardPage() {
       label: "Amount Received",
       value: formatINR(summary?.amountReceived ?? 0),
       icon: Wallet,
-      tile: "from-emerald-500 to-green-600",
+      tile: "bg-emerald-50 text-emerald-600 border border-emerald-100",
       sub: "collected",
       financial: true,
     },
@@ -260,7 +260,7 @@ export default function DashboardPage() {
       label: "Outstanding",
       value: formatINR(summary?.outstandingAmount ?? 0),
       icon: IndianRupee,
-      tile: "from-violet-400 to-purple-600",
+      tile: "bg-violet-50 text-violet-600 border border-violet-100",
       sub: "receivable",
       financial: true,
     },
@@ -268,7 +268,7 @@ export default function DashboardPage() {
       label: "Total Expenses",
       value: formatINR(summary?.totalExpenses ?? 0),
       icon: Receipt,
-      tile: "from-rose-500 to-red-600",
+      tile: "bg-rose-50 text-rose-600 border border-rose-100",
       sub: "all time",
       financial: true,
       adminAction: isAdmin,
@@ -278,7 +278,7 @@ export default function DashboardPage() {
       label: "Documents",
       value: summary?.documents ?? 0,
       icon: FolderOpen,
-      tile: "from-slate-500 to-slate-700",
+      tile: "bg-slate-100 text-slate-600 border border-hairline",
       sub: "stored securely",
       href: "/documents",
     },
@@ -307,27 +307,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="page-title">
             {greeting}, {user?.name?.split(" ")[0]}
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Practice overview for today
-          </p>
+          <p className="page-subtitle mt-1">Practice overview for today</p>
         </div>
         <div className="flex items-center gap-2">
           {isAdmin && (
             <button
               onClick={openAddExpense}
-              className="inline-flex items-center gap-2 rounded-md bg-rose-600 text-white text-sm font-medium px-3.5 py-2 hover:bg-rose-700 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white shadow-[0_1px_2px_rgba(225,29,72,0.26)] transition-all hover:bg-rose-700 active:translate-y-px"
             >
               <Plus size={15} /> Add expense
             </button>
           )}
           <Link
             href="/clients"
-            className="inline-flex items-center gap-2 rounded-md bg-indigo-600 text-white text-sm font-medium px-3.5 py-2 hover:bg-indigo-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-[0_1px_2px_rgba(79,70,229,0.28)] transition-all hover:bg-brand-700 active:translate-y-px"
           >
             <Users size={15} /> Add client
           </Link>
@@ -341,7 +339,7 @@ export default function DashboardPage() {
           const contents = (
             <>
               <div className="flex items-start justify-between">
-                <div className={`h-11 w-11 rounded-xl bg-gradient-to-br ${s.tile} flex items-center justify-center text-white shadow-md`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.tile}`}>
                   <s.icon size={20} />
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
@@ -364,10 +362,10 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <p className="mt-4 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+              <p className="eyebrow mt-4">
                 {s.label}
               </p>
-              <p className="mt-1 text-xl md:text-2xl font-bold text-slate-900 tracking-tight truncate">
+              <p className="num mt-1.5 truncate text-2xl font-semibold tracking-[-0.022em] text-slate-900">
                 {s.value}
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">{s.sub}</p>
@@ -377,7 +375,7 @@ export default function DashboardPage() {
             <Link
               key={s.label}
               href={s.href}
-              className={`card card-hover p-5 block ${s.alert ? "ring-2 ring-rose-200" : ""}`}
+              className={`card card-interactive block p-5 ${s.alert ? "border-rose-200" : ""}`}
               title={`View ${s.label.toLowerCase()}`}
             >
               {contents}
@@ -385,7 +383,7 @@ export default function DashboardPage() {
           ) : (
             <div
               key={s.label}
-              className={`card card-hover p-5 ${s.alert ? "ring-2 ring-rose-200" : ""}`}
+              className={`card card-interactive p-5 ${s.alert ? "border-rose-200" : ""}`}
             >
               {contents}
             </div>
@@ -494,7 +492,7 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100">
+                  <tr className="border-b border-hairline">
                     <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Description</th>
                     <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Category</th>
                     <th className="text-left py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Date</th>
@@ -514,14 +512,14 @@ export default function DashboardPage() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => openEditExpense(ex)}
-                              className="text-slate-300 hover:text-indigo-500 transition-colors p-1"
+                              className="text-slate-400 hover:text-indigo-500 transition-colors p-1"
                               title="Edit expense"
                             >
                               <Pencil size={13} />
                             </button>
                             <button
                               onClick={() => handleDeleteExpense(ex._id)}
-                              className="text-slate-300 hover:text-rose-500 transition-colors p-1"
+                              className="text-slate-400 hover:text-rose-500 transition-colors p-1"
                               title="Delete expense"
                             >
                               <Trash2 size={13} />
@@ -542,10 +540,10 @@ export default function DashboardPage() {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <h2 className="font-semibold text-slate-900">Compliance Overview</h2>
+              <h2 className="font-semibold text-slate-900">Worklist Overview</h2>
               <p className="text-xs text-slate-400 mt-0.5">{complianceTotal} records</p>
             </div>
-            <FileCheck2 size={18} className="text-slate-300" />
+            <FileCheck2 size={18} className="text-slate-400" />
           </div>
           <div className="flex h-2.5 rounded-full overflow-hidden bg-slate-100 mb-5">
             {complianceData.map((d) =>
@@ -567,14 +565,14 @@ export default function DashboardPage() {
               </li>
             ))}
             {complianceTotal <= 1 && complianceData.every((d) => d.value === 0) && (
-              <li className="text-xs text-slate-400 text-center pt-2">No compliance records yet</li>
+              <li className="text-xs text-slate-400 text-center pt-2">No worklist items yet</li>
             )}
           </ul>
           <Link
             href="/compliance"
             className="mt-5 flex items-center justify-between text-[13px] font-medium text-brand-700 hover:text-brand-800"
           >
-            View compliance <ArrowRight size={14} />
+            View worklist <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -584,7 +582,7 @@ export default function DashboardPage() {
               <h2 className="font-semibold text-slate-900">Task Overview</h2>
               <p className="text-xs text-slate-400 mt-0.5">{taskTotal} tasks</p>
             </div>
-            <CheckSquare size={18} className="text-slate-300" />
+            <CheckSquare size={18} className="text-slate-400" />
           </div>
           <div className="flex h-2.5 rounded-full overflow-hidden bg-slate-100 mb-5">
             {taskData.map((d) =>
@@ -623,13 +621,13 @@ export default function DashboardPage() {
               <h2 className="font-semibold text-slate-900">Recent Activity</h2>
               <p className="text-xs text-slate-400 mt-0.5">Latest actions</p>
             </div>
-            <Activity size={18} className="text-slate-300" />
+            <Activity size={18} className="text-slate-400" />
           </div>
           {activity.length === 0 ? (
             <EmptyState
               compact
               title="No recent activity"
-              description="Actions across clients, compliance and tasks will show here."
+              description="Actions across clients, worklist items and tasks will show here."
               className="py-8"
             />
           ) : (

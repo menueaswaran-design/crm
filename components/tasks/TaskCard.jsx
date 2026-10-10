@@ -28,38 +28,42 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
   };
 
   return (
-    <div className="card p-4 flex flex-col">
+    <div className="card card-interactive flex flex-col p-4">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-slate-900 leading-snug text-sm sm:text-base">{task.title}</h3>
-        <div className="flex gap-0.5 shrink-0">
+        <h3 className="text-sm font-semibold leading-snug tracking-[-0.011em] text-slate-900 sm:text-base">
+          {task.title}
+        </h3>
+        <div className="flex shrink-0 gap-0.5">
           {onEdit && (
-            <button onClick={() => onEdit(task)} className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors" aria-label="Edit">
+            <button onClick={() => onEdit(task)} className="rounded-md p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 sm:p-1.5" aria-label="Edit">
               <Pencil size={15} />
             </button>
           )}
           {onDelete && (
-            <button onClick={() => onDelete(task)} className="p-2 sm:p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" aria-label="Delete">
+            <button onClick={() => onDelete(task)} className="rounded-md p-2 text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 sm:p-1.5" aria-label="Delete">
               <Trash2 size={15} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <StatusBadge status={derivedStatus} />
         <PriorityBadge priority={task.priority} />
         {unassigned && <CategoryBadge category="Unassigned" />}
       </div>
 
-      <p className="mt-2.5 text-xs sm:text-sm text-slate-600 line-clamp-2">{task.description}</p>
+      <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-slate-600 sm:text-sm">
+        {task.description}
+      </p>
 
-      <div className="mt-3 space-y-1.5 text-xs sm:text-[13px] text-slate-600">
+      <div className="mt-3.5 space-y-2 text-xs text-slate-600 sm:text-[13px]">
         <p className="flex items-center gap-2 truncate">
-          <Building2 size={14} className="text-slate-400 shrink-0" />
+          <Building2 size={14} className="shrink-0 text-slate-400" />
           <span className="truncate">{task.clientId?.name || "—"}</span>
         </p>
         <p className="flex items-center gap-2">
-          <User size={14} className="text-slate-400 shrink-0" />
+          <User size={14} className="shrink-0 text-slate-400" />
           {unassigned ? (
             <span className="font-medium text-amber-700">Unassigned</span>
           ) : (
@@ -67,15 +71,15 @@ export default function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
           )}
         </p>
         <p className="flex items-center gap-2">
-          <CalendarDays size={14} className="text-slate-400 shrink-0" />
-          <span className={isLate ? "text-rose-600 font-medium" : isSoon ? "text-amber-600 font-medium" : ""}>
+          <CalendarDays size={14} className="shrink-0 text-slate-400" />
+          <span className={isLate ? "font-medium text-rose-600" : isSoon ? "font-medium text-amber-600" : ""}>
             {formatDate(task.dueDate)}
           </span>
         </p>
       </div>
 
       {derivedStatus !== "COMPLETED" && (
-        <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+        <div className="mt-3.5 flex flex-wrap gap-2 border-t border-hairline pt-3">
           {derivedStatus === "PENDING" && (
             <Button size="sm" variant="secondary" onClick={() => changeStatus("IN_PROGRESS")} disabled={updating}>
               <PlayCircle size={14} /> Start

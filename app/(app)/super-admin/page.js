@@ -111,12 +111,10 @@ export default function SuperAdminPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
-            Companies &amp; Admins
-          </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="page-title">Companies &amp; Admins</h1>
+          <p className="page-subtitle mt-1 max-w-2xl">
             Each company gets a unique Organisation ID (orgId). Even two companies with the same
             name are fully isolated — tenancy never depends on the name.
           </p>
@@ -220,16 +218,16 @@ export default function SuperAdminPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-100 bg-slate-50/60">
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Company</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Org ID</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Admin</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Status</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Created</th>
+                <tr className="table-head border-b border-hairline bg-canvas/60">
+                  <th className="px-5 py-3.5">Company</th>
+                  <th className="px-5 py-3.5">Org ID</th>
+                  <th className="px-5 py-3.5">Admin</th>
+                  <th className="px-5 py-3.5">Status</th>
+                  <th className="px-5 py-3.5">Created</th>
                   <th className="px-5 py-3.5 font-semibold uppercase tracking-wide text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-hairline">
                 {companies.map((c) => (
                   <tr key={c._id} className="hover:bg-brand-50/30 transition-colors">
                     <td className="px-5 py-4">
@@ -318,7 +316,7 @@ export default function SuperAdminPage() {
                 type="checkbox"
                 checked={editActive}
                 onChange={(e) => setEditActive(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-300"
+                className="h-4 w-4 rounded border-hairline-strong text-brand-600 focus:ring-brand-300"
               />
               Active (admins can log in and access this tenant)
             </label>
@@ -328,7 +326,7 @@ export default function SuperAdminPage() {
                 <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
                   <History size={13} /> Edit history
                 </div>
-                <ul className="divide-y divide-slate-100 border border-slate-100 rounded-lg">
+                <ul className="divide-y divide-hairline border border-hairline rounded-lg">
                   {editing.editHistory.slice(-8).reverse().map((h, i) => (
                     <li key={i} className="px-3 py-2 text-xs">
                       <p className="text-slate-700">

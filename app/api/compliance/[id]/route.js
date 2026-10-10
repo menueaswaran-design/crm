@@ -16,7 +16,7 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
 
     const record = await Compliance.findOne({ _id: id, companyId: user.companyId });
-    if (!record) return fail("Compliance record not found.", 404);
+    if (!record) return fail("Worklist item not found.", 404);
 
     const client = await Client.findById(record.clientId).lean();
     let nextScheduled = null;
@@ -73,7 +73,7 @@ export async function PATCH(request, { params }) {
       { ...record.toJSON(), nextScheduled },
       nextScheduled
         ? "Marked complete. Next occurrence scheduled."
-        : "Compliance updated successfully."
+        : "Worklist item updated successfully."
     );
   } catch (error) {
     return handleError(error);
@@ -87,7 +87,7 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
 
     const record = await Compliance.findOneAndDelete({ _id: id, companyId: user.companyId });
-    if (!record) return fail("Compliance record not found.", 404);
+    if (!record) return fail("Worklist item not found.", 404);
 
     await logActivity({
       userId: user._id,
@@ -95,10 +95,10 @@ export async function DELETE(request, { params }) {
       action: "COMPLIANCE_DELETED",
       entityType: "Compliance",
       entityId: id,
-      description: `${user.name} deleted compliance ${record.type}`,
+      description: `${user.name} deleted worklist item ${record.type}`,
     });
 
-    return ok(null, "Compliance deleted successfully.");
+    return ok(null, "Worklist item deleted successfully.");
   } catch (error) {
     return handleError(error);
   }

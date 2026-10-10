@@ -1,4 +1,4 @@
-import { AlertCircle, Info, ChevronDown } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 export default function Field({
   label,
@@ -57,18 +57,12 @@ export function Textarea({ label, error, required, hint, className = "", ...prop
 export function Select({ label, error, required, hint, children, className = "", ...props }) {
   return (
     <Field label={label} error={error} required={required} hint={hint}>
-      <div className="relative">
-        <select
-          className={`input-base ${error ? "input-error" : ""} cursor-pointer appearance-none pr-10 ${className}`}
-          {...props}
-        >
-          {children}
-        </select>
-        <ChevronDown
-          size={16}
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
-        />
-      </div>
+      <select
+        className={`input-base cursor-pointer ${error ? "input-error" : ""} ${className}`}
+        {...props}
+      >
+        {children}
+      </select>
     </Field>
   );
 }

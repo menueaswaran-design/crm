@@ -125,7 +125,7 @@ export default function LoginDetails() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or email..."
-              className="input-base pl-9"
+              className="input-base input-search"
             />
           </div>
           <div className="flex flex-wrap items-end gap-2">
@@ -197,21 +197,21 @@ export default function LoginDetails() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-100 bg-slate-50/60">
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Staff Member</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Email</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Login Time</th>
-                  <th className="px-5 py-3.5 font-semibold uppercase tracking-wide">Date</th>
+                <tr className="table-head border-b border-hairline bg-canvas/60">
+                  <th className="px-5 py-3.5">Staff Member</th>
+                  <th className="px-5 py-3.5">Email</th>
+                  <th className="px-5 py-3.5">Login Time</th>
+                  <th className="px-5 py-3.5">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-hairline">
                 {filtered.map((r, i) => {
                   const isSelf = currentUser?._id === r.userId;
                   return (
                     <tr key={r._id || i} className="hover:bg-brand-50/30 transition-colors">
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-[11px] font-semibold text-white shadow-[0_1px_2px_rgba(79,70,229,0.28)]">
                             {initials(r.name)}
                           </div>
                           <div className="min-w-0">

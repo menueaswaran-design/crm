@@ -13,7 +13,7 @@ import ErrorBanner from "@/components/common/ErrorBanner";
 const TYPE_META = {
   TASK_DUE: { icon: CalendarClock, cls: "bg-sky-50 text-sky-600" },
   TASK_OVERDUE: { icon: AlertTriangle, cls: "bg-rose-50 text-rose-600" },
-  COMPLIANCE_DUE: { icon: CalendarDays, cls: "bg-indigo-50 text-indigo-600" },
+  COMPLIANCE_DUE: { icon: CalendarDays, cls: "bg-brand-50 text-brand-600" },
   COMPLIANCE_OVERDUE: { icon: ShieldAlert, cls: "bg-orange-50 text-orange-600" },
   PAYMENT_DUE: { icon: CreditCard, cls: "bg-emerald-50 text-emerald-600" },
   DOCUMENT_UPLOADED: { icon: FileText, cls: "bg-purple-50 text-purple-600" },
@@ -60,8 +60,8 @@ export default function NotificationsPage() {
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Notifications</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="page-title">Notifications</h1>
+          <p className="page-subtitle mt-1 num">
             {unread > 0 ? `${unread} unread notification${unread > 1 ? "s" : ""}` : "You're all caught up"}
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function NotificationsPage() {
       ) : items.length === 0 ? (
         <EmptyState title="No notifications" description="You're all caught up." />
       ) : (
-        <div className="card p-0 divide-y divide-slate-100 overflow-hidden">
+        <div className="card p-0 divide-y divide-hairline overflow-hidden">
           {items.map((n) => {
             const meta = TYPE_META[n.type] || { icon: Bell, cls: "bg-slate-100 text-slate-500" };
             const Icon = meta.icon;

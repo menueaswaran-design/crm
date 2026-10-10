@@ -13,7 +13,7 @@ import { COMPLIANCE_TYPES, COMPLIANCE_CATEGORIES } from "@/lib/utils";
 
 const schema = z.object({
   clientId: z.string().min(1, "Client is required."),
-  type: z.string().min(1, "Compliance type is required."),
+  type: z.string().min(1, "Worklist type is required."),
   category: z.string().min(1, "Category is required."),
   period: z.string().min(1, "Period is required."),
   financialYear: z.string().min(1, "Financial year is required."),
@@ -104,7 +104,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
     <Modal
       open={open}
       onClose={onClose}
-      title={record ? "Edit Compliance" : "Add Compliance"}
+      title={record ? "Edit Worklist Item" : "Add Worklist Item"}
       maxWidth="max-w-3xl"
       footer={
         <div className="flex justify-end gap-3">
@@ -112,7 +112,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
             Cancel
           </Button>
           <Button type="submit" form="compliance-form" loading={isSubmitting}>
-            {isSubmitting ? "Saving..." : record ? "Save Changes" : "Add Compliance"}
+            {isSubmitting ? "Saving..." : record ? "Save Changes" : "Add Worklist Item"}
           </Button>
         </div>
       }
@@ -131,7 +131,7 @@ export default function ComplianceForm({ open, onClose, record, onSaved }) {
             error={errors.clientId?.message}
             required
           />
-          <Select label="Compliance Type" required error={errors.type?.message} {...register("type")}>
+          <Select label="Worklist Type" required error={errors.type?.message} {...register("type")}>
             {COMPLIANCE_TYPES.map((t) => (
               <option key={t} value={t}>
                 {t}

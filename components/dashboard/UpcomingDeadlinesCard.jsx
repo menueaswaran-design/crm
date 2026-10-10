@@ -89,7 +89,7 @@ export default function UpcomingDeadlinesCard({ items = null, refreshKey = 0 }) 
           )}
           <button
             onClick={() => setCalendarOpen(true)}
-            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
             title="View month-wise due calendar"
             aria-label="Open due dates calendar"
           >
@@ -115,8 +115,8 @@ export default function UpcomingDeadlinesCard({ items = null, refreshKey = 0 }) 
           title={view === "overdue" ? "Nothing overdue" : "No upcoming deadlines"}
           description={
             view === "overdue"
-              ? "All compliance and tasks are on track."
-              : "Due dates from compliance and tasks will appear here."
+              ? "All worklist items and tasks are on track."
+              : "Due dates from worklist items and tasks will appear here."
           }
           className="py-4 sm:py-6"
         />
@@ -142,7 +142,7 @@ export default function UpcomingDeadlinesCard({ items = null, refreshKey = 0 }) 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate">{item.label}</p>
-                    {item.type === "Task" && <ClipboardList size={12} className="text-slate-300 shrink-0" />}
+                    {item.type === "Task" && <ClipboardList size={12} className="text-slate-400 shrink-0" />}
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-500 truncate">{item.client}</p>
                   <p className="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
@@ -157,7 +157,7 @@ export default function UpcomingDeadlinesCard({ items = null, refreshKey = 0 }) 
       {!loading && shown.length === 0 ? null : (
         <Link
           href="/compliance"
-          className="mt-4 sm:mt-5 block text-center text-[13px] font-medium text-brand-700 border border-slate-200 rounded-xl py-2 sm:py-2.5 hover:bg-brand-50 hover:border-brand-200 transition-colors"
+          className="mt-4 sm:mt-5 block text-center text-[13px] font-medium text-brand-700 border border-hairline rounded-xl py-2 sm:py-2.5 hover:bg-brand-50 hover:border-brand-200 transition-colors"
         >
           View all deadlines <ArrowRight size={12} className="inline" />
         </Link>

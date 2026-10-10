@@ -123,7 +123,7 @@ export default function DueCalendarModal({ open, onClose }) {
 
           <div className="grid grid-cols-7 gap-y-1 text-center">
             {WEEKDAYS.map((w, i) => (
-              <span key={`${w}-${i}`} className="text-[10px] font-medium uppercase text-slate-300 py-1">{w}</span>
+              <span key={`${w}-${i}`} className="text-[10px] font-medium uppercase text-slate-400 py-1">{w}</span>
             ))}
             {cells.map((date, i) => {
               if (!date) return <span key={`blank-${i}`} />;
@@ -138,14 +138,14 @@ export default function DueCalendarModal({ open, onClose }) {
                   disabled={!hasDue}
                   className={`relative mx-auto h-8 w-8 rounded-lg text-xs flex flex-col items-center justify-center transition-colors ${
                     isSelected
-                      ? "bg-indigo-600 text-white font-bold"
+                      ? "bg-brand-600 text-white font-bold"
                       : hasDue
-                      ? "bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100 cursor-pointer"
+                      ? "bg-brand-50 text-brand-700 font-semibold hover:bg-indigo-100 cursor-pointer"
                       : "text-slate-500 hover:bg-slate-50 cursor-default"
                   }`}
                 >
                   {date.getDate()}
-                  {isToday && !isSelected && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-indigo-500" />}
+                  {isToday && !isSelected && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-brand-500" />}
                   {hasDue && !isSelected && (
                     <span className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-white ${
                       items.some((r) => r.status === "OVERDUE") ? "bg-rose-500" : "bg-emerald-500"
@@ -158,12 +158,12 @@ export default function DueCalendarModal({ open, onClose }) {
           <div className="mt-3 flex items-center gap-3 text-[10px] text-slate-400">
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" /> due</span>
             <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-500" /> overdue</span>
-            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-indigo-500" /> today</span>
+            <span className="flex items-center gap-1"><span className="h-1 w-1 rounded-full bg-brand-500" /> today</span>
           </div>
         </div>
 
         {/* Month list */}
-        <div className="flex-1 min-w-0 border-t sm:border-t-0 sm:border-l border-slate-100 pt-4 sm:pt-0 sm:pl-5">
+        <div className="flex-1 min-w-0 border-t sm:border-t-0 sm:border-l border-hairline pt-4 sm:pt-0 sm:pl-5">
           <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-slate-400 mb-3">
             <CalendarDays size={12} />
             {selected ? formatDate(selected) : `${MONTH_LABELS[cursor.getMonth()]} dues`}
@@ -182,7 +182,7 @@ export default function DueCalendarModal({ open, onClose }) {
                 {dayRecords.map((r) => (
                   <li key={r._id} className="py-2.5 flex items-center gap-3">
                     <span className={`h-7 min-w-11 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center ${
-                      r.status === "OVERDUE" ? "bg-rose-50 text-rose-600" : "bg-indigo-50 text-indigo-600"
+                      r.status === "OVERDUE" ? "bg-rose-50 text-rose-600" : "bg-brand-50 text-brand-600"
                     }`}>
                       {formatDate(r.dueDate).slice(0, 6)}
                     </span>
@@ -203,7 +203,7 @@ export default function DueCalendarModal({ open, onClose }) {
                 return (
                   <li key={r._id} className="py-2.5 flex items-center gap-3">
                     <span className={`h-7 min-w-11 px-1.5 rounded-md text-[11px] font-bold flex items-center justify-center shrink-0 ${
-                      overdue ? "bg-rose-50 text-rose-600" : "bg-indigo-50 text-indigo-600"
+                      overdue ? "bg-rose-50 text-rose-600" : "bg-brand-50 text-brand-600"
                     }`}>
                       {formatDate(r.dueDate).slice(0, 6)}
                     </span>

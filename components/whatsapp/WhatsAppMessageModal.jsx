@@ -83,7 +83,7 @@ export default function WhatsAppMessageModal({
       }
     >
       <div className="space-y-4">
-        <div className="flex items-center gap-3 rounded-lg bg-slate-50 border border-slate-200 px-4 py-3">
+        <div className="flex items-center gap-3 rounded-lg bg-canvas-deep border border-hairline px-4 py-3">
           <div className="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
             <WhatsAppIcon size={18} />
           </div>

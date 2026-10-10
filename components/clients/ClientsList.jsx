@@ -19,22 +19,29 @@ export default function ClientsList({ clients, onEdit, onDelete, onAssigned }) {
 
   return (
     <>
-    <div className="card divide-y divide-slate-100">
+    <div className="card divide-y divide-hairline">
       {clients.map((c) => (
-        <div key={c._id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 transition-colors">
-          <div className="min-w-0 flex-1 flex items-center gap-3">
-            <Link href={`/clients/${c._id}`} className="font-medium text-sm text-slate-900 hover:text-indigo-700 truncate">
+        <div key={c._id} className="table-row flex items-center gap-3 px-4 py-2.5">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Link
+              href={`/clients/${c._id}`}
+              className="truncate text-sm font-medium tracking-[-0.008em] text-slate-900 transition-colors hover:text-brand-700"
+            >
               {c.name}
             </Link>
             {c.clientCode && (
-              <span className="font-mono text-[11px] text-slate-400 shrink-0">{c.clientCode}</span>
+              <span className="shrink-0 font-mono text-[11px] text-slate-400">{c.clientCode}</span>
             )}
             <CategoryBadge category={c.category} />
             {c.status === "inactive" && (
-              <span className="text-[11px] rounded bg-slate-100 text-slate-500 px-1.5 py-0.5 shrink-0">Inactive</span>
+              <span className="shrink-0 rounded-md border border-hairline bg-canvas px-1.5 py-0.5 text-[11px] text-slate-500">
+                Inactive
+              </span>
             )}
-            <span className="hidden md:inline font-mono text-xs text-slate-400 truncate">{c.pan || ""}</span>
-            <span className="hidden lg:inline text-xs text-slate-400 truncate">{c.email || ""}</span>
+            <span className="hidden truncate font-mono text-xs text-slate-400 md:inline">
+              {c.pan || ""}
+            </span>
+            <span className="hidden truncate text-xs text-slate-400 lg:inline">{c.email || ""}</span>
           </div>
           <div className="hidden sm:block w-32 text-right text-xs text-slate-500 truncate">
             {assignedStaffIds(c.assignedStaff).length ? (
@@ -55,7 +62,7 @@ export default function ClientsList({ clients, onEdit, onDelete, onAssigned }) {
           <div className="flex gap-0.5 shrink-0">
             <Link
               href={`/clients/${c._id}`}
-              className="p-1.5 rounded-md text-slate-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors"
+              className="p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-brand-50 transition-colors"
               aria-label="View client"
             >
               <ArrowUpRight size={15} />
