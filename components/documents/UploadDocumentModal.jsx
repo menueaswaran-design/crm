@@ -11,9 +11,9 @@ import { DOCUMENT_CATEGORIES, formatBytes } from "@/lib/utils";
 
 const ALLOWED = ["pdf", "docx", "xlsx", "xls", "jpg", "jpeg", "png"];
 const ACCEPT = ".pdf,.docx,.xlsx,.xls,.jpg,.jpeg,.png";
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB per file
+const MAX_SIZE = 80 * 1024 * 1024; // 80 MB per file
 const MAX_FILES = 20;
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50 MB per batch
+const MAX_TOTAL_SIZE = 80 * 1024 * 1024; // 80 MB per batch
 
 const fileKey = (f) => `${f.name}:${f.size}:${f.lastModified}`;
 

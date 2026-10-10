@@ -10,9 +10,9 @@ import { logActivity } from "@/lib/activity";
 import { isAssignedToUser } from "@/lib/clientAssignment";
 
 const ALLOWED_EXTENSIONS = ["pdf", "docx", "xlsx", "xls", "jpg", "jpeg", "png"];
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB per file
+const MAX_SIZE = 80 * 1024 * 1024; // 80 MB per file
 const MAX_FILES = 20; // files per batch
-const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50 MB per batch
+const MAX_TOTAL_SIZE = 80 * 1024 * 1024; // 80 MB per batch
 
 /**
  * Persists one uploaded file to Cloudinary (or the local fallback)

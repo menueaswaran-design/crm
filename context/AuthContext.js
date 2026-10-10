@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
 
   const setToken = useCallback((token) => {
     if (typeof document === "undefined") return;
-    document.cookie = `${TOKEN_COOKIE}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+    document.cookie = `${TOKEN_COOKIE}=${token}; path=/; max-age=${60 * 60 * 24 * 2}; samesite=lax`;
   }, []);
 
   const clearToken = useCallback(() => {

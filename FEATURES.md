@@ -32,7 +32,7 @@
 
 ### 2.1 Login
 - Email/password login via Firebase `signInWithEmailAndPassword` (`app/login/page.js`, `context/AuthContext.js`).
-- On success, ID token → `POST /api/auth/sync` → user persisted in `localStorage` (`crm_user`) + cookie `crm_token` (max-age 7 days, `samesite=lax`).
+- On success, ID token → `POST /api/auth/sync` → user persisted in `localStorage` (`crm_user`) + cookie `crm_token` (max-age 2 days, `samesite=lax`).
 - Show/hide password toggle; "Remember me" style role state; `?redirect=` deep-link support; demo-mode banner when `NEXT_PUBLIC_DEMO_MODE === "true"`.
 - Post-login redirect resolved by `resolvePostLoginRedirect(user, requestedPath)` → falls back to role default route.
 - Login feature grid rendered on the login page.
@@ -42,7 +42,7 @@
 
 ### 2.3 Server token verification (`lib/auth.js`)
 - Reads `Authorization: Bearer` header first, falls back to `crm_token` cookie.
-- `demo-` prefixed tokens → HS256 JWT verification (`DEMO_JWT_SECRET`, 7-day expiry) via `createDemoToken` / `verifyDemoToken`.
+- `demo-` prefixed tokens → HS256 JWT verification (`DEMO_JWT_SECRET`, 2-day expiry) via `createDemoToken` / `verifyDemoToken`.
 - Other tokens → Firebase ID-token verification against Google JWKS (project `crm-ca-db172`, issuer + audience validated) via `verifyFirebaseIdToken`.
 - `getCurrentUser(request)` — loads Mongo user by `firebaseUid`, falls back to email lookup and **auto-links** the Firebase UID; inactive users → `null`/401.
 
