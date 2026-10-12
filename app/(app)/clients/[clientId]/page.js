@@ -35,6 +35,7 @@ import { CategoryBadge, StatusBadge } from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import WhatsAppButton from "@/components/whatsapp/WhatsAppButton";
 import AssignStaffModal from "@/components/clients/AssignStaffModal";
+import ClientForm from "@/components/clients/ClientForm";
 import UploadDocumentModal from "@/components/documents/UploadDocumentModal";
 import DocumentRow from "@/components/documents/DocumentRow";
 import ConfirmDialog from "@/components/common/ConfirmDialog";
@@ -61,6 +62,7 @@ export default function ClientDetailsPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [docCategory, setDocCategory] = useState("");
   const [deleteDoc, setDeleteDoc] = useState(null);
@@ -193,7 +195,7 @@ export default function ClientDetailsPage() {
                   Client since {formatDate(client.createdAt)} · {client.email || "no email on file"}
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <Button variant="secondary" size="sm" onClick={() => router.push("/clients")}>
+                  <Button variant="secondary" size="sm" onClick={() => setEditOpen(true)}>
                     <Pencil size={13} /> Edit
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(true)} className="text-rose-600 hover:bg-rose-50">
@@ -552,6 +554,13 @@ export default function ClientDetailsPage() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
         loading={deleteLoading}
+      />
+
+      <ClientForm
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        client={client}
+        onSaved={load}
       />
 
       <AssignStaffModal
